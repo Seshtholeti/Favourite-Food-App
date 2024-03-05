@@ -7,7 +7,6 @@ const MainComponent = () => {
   );
   const [components, setComponents] = useState([]);
   const [selectedComponents, setSelectedComponents] = useState([]);
-  const [responseData, setResponseData] = useState(null);
   const [availableTags, setAvailableTags] = useState([]);
   const [selectedTag, setSelectedTag] = useState(null);
   const [showSpinnerModal, setShowSpinnerModal] = useState(false);
@@ -26,7 +25,6 @@ const MainComponent = () => {
       .post(apiComponents, { intent: "agents" })
       .then((response) => {
         setComponents(Object.keys(response.data));
-        setResponseData(response.data);
         setShowSpinnerModal(false);
       })
       .catch((error) => {
@@ -83,13 +81,13 @@ const MainComponent = () => {
       "https://l78y00q47e.execute-api.us-east-1.amazonaws.com/test/";
     axios
       .post(addTagApi, {
-        arn: selectedComponents,
+        arn: selectedComponents, // Pass array of ARNs
         tagName: newTagKey,
         tagValue: newTagValue,
         intent: "addTag",
       })
       .then((response) => {
-        fetchTagsForARN(selectedComponents[0]); // Refresh tags after adding
+        fetchTagsForARN(selectedComponents[0]); // Refresh tags after adding (using the first selected component)
         setNewTagKey("");
         setNewTagValue("");
         setShowSpinnerModal(false);
@@ -139,8 +137,7 @@ const MainComponent = () => {
         </div>
       </div>
       {showSpinnerModal && (
-        <
-div
+        <div
           style={{
             position: "fixed",
             top: 0,
@@ -207,6 +204,46 @@ div
         <div
           style={{
             flex: "1",
+        backgroundColor: "#D3D3D3",
+        borderRadius: "10px",
+        boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+        padding: "20px",
+      }}
+    >
+      <h2 style={{ marginBottom: "20px", fontSize: "20px" }}>Add Tag</h2>
+      <input
+        type="text"
+        placeholder="Key"
+        value={newTagKey}
+        onChange={(e) => setNewTagKey(e.target.value)}
+        style={{ marginBottom: "10px", width: "80%", padding: "8px" }}
+      />
+      <input
+        type="text"
+        placeholder="Value"
+        value={newTagValue}
+        onChange={(e) => setNewTagValue(e.target.value)}
+        style={{ marginBottom: "10px", width: "80%", padding: "8px" }}
+      />
+      <button
+        onClick={handleAddTag}
+        style={{
+          padding: "10px 20px",
+          marginLeft: "270px",
+          backgroundColor: "#28a745",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          fontSize: "16px",
+          display: "flex",
+        }}
+      >
+        Add
+      </button>
+    </div>
+  </div>
+</div>
             backgroundColor: "#D3D3D3",
             borderRadius: "10px",
             boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
@@ -246,57 +283,11 @@ div
           </button>
         </div>
       </div>
-      <div style={{ display: "flex", padding: "20px" }}>
-        <div
-          style={{
-            flex: "1",
-            backgroundColor: "#D3D3D3",
-            borderRadius: "10px",
-            boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-            padding: "20px",
-          }}
-        >
-          <h2 style={{ marginBottom: "20px", fontSize: "20px" }}>Available Tags</h2>
-          <select
-            value={selectedTag}
-            onChange={(event) => handleTagSelect(event.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "16px",
-            }}
-          >
-            <option value="">Select a tag</option>
-            {availableTags.map(([key, value], index) => (
-              <option key={index} value={key}>
-                {key}: {value}
-              </option>
-            ))}
-          </select>
-          {selectedTag && (
-            <button
-              onClick={() => handleRemoveTag(selectedComponents[0], selectedTag)}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#dc3545",
-                color: "#fff",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                fontSize: "16px",
-                marginLeft: "10px",
-                marginTop: "40px",
-              }}
-            >
-              Remove
-            </button>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
 
 export default MainComponent;
+```
+
+
