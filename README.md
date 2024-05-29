@@ -1,12 +1,31 @@
+import React from "react";
+function ReservationCenterHeader() {
+  const footerStyle = {
+    color: "white",
+    // Dark blue color
+    backgroundColor: "#800080",
+    // Adjust font size as needed
+    padding: "10px",
+    height: "4.7vh",
+    display: "flex",
+    alignItems: "flex-start",
+    fontSize: "24px",
+  };
+  return <div style={footerStyle}>LWT>>></div>;
+}
+export default ReservationCenterHeader;
+this is my footer
+
+
+
 import React, { useEffect, useState } from "react";
 const containerStyle = {
   display: "flex",
   alignItems: "flex-start",
-  backgroundColor: "blue",
+  // backgroundColor: "blue",
   color: "#333",
   padding: "20px",
-
-  height: "88.9vh",
+  height: "80.9vh",
   boxSizing: "border-box",
   overflow: "hidden",
 };
@@ -22,8 +41,6 @@ const imageStyle = {
   width: "100%",
   height: "100%",
   borderRadius: "5px",
-
-  // objectFit: "cover",
 };
 const dataContainerStyle = {
   flex: 1,
@@ -36,16 +53,9 @@ const dataContainerStyle = {
   justifyContent: "center",
   alignItems: "center",
 };
-// const headerStyle = {
-//   textAlign: "center",
-//   marginBottom: "20px",
-//   fontSize: "24px",
-//   color: "white",
-//   fontWeight: "bold",
-// };
 const cardStyle = {
-  backgroundColor: "#003366",
-  padding: "11px",
+  backgroundColor: "#800080",
+  padding: "8px",
   borderRadius: "5px",
   display: "flex",
   justifyContent: "space-between",
@@ -55,16 +65,16 @@ const cardStyle = {
   fontSize: "14px",
   width: "200px",
   transition: "background-color 0.3s ease",
-
-  ":hover": {
-    backgroundColor: "red",
-    color: "white",
-  },
 };
-
+const hoveredCardStyle = {
+  backgroundColor: "red",
+  color: "white",
+  pointer: "cursor",
+};
 const App = () => {
   const [data, setData] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [hoveredCards, setHoveredCards] = useState([]); // Track hovered state for each card
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -92,13 +102,34 @@ const App = () => {
     // Cleanup interval on component unmount
     return () => clearInterval(interval);
   }, []);
-
-  const renderCard = (label, value) => (
-    <div style={cardStyle}>
+  const renderCard = (label, value, index) => (
+    <div
+      key={index}
+      style={{
+        ...cardStyle,
+        ...(hoveredCards[index] ? hoveredCardStyle : null),
+      }}
+      onMouseEnter={() => handleMouseEnter(index)}
+      onMouseLeave={() => handleMouseLeave(index)}
+    >
       <span>{label}:</span>
       <span>{value}</span>
     </div>
   );
+  const handleMouseEnter = (index) => {
+    setHoveredCards((prev) => {
+      const newHoveredCards = [...prev];
+      newHoveredCards[index] = true;
+      return newHoveredCards;
+    });
+  };
+  const handleMouseLeave = (index) => {
+    setHoveredCards((prev) => {
+      const newHoveredCards = [...prev];
+      newHoveredCards[index] = false;
+      return newHoveredCards;
+    });
+  };
   return (
     <div style={containerStyle}>
       <div style={imageContainerStyle}>
@@ -109,10 +140,19 @@ const App = () => {
         )}
       </div>
       <div style={dataContainerStyle}>
-        {/* <h2 style={headerStyle}>Reservation Centre</h2> */}
-        {data && Object.keys(data).map((key) => renderCard(key, data[key]))}
+        {data &&
+          Object.keys(data).map((key, index) =>
+            renderCard(key, data[key], index)
+          )}
       </div>
     </div>
   );
 };
 export default App;
+
+
+
+this is my dashboard.js
+
+
+here we have metric GUEST_RELS and RES_CENTRE:   these values should be in the footer not with the same metrics coming from the api rest all same place
