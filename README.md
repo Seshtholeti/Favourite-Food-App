@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "./Header";
-
 import img1 from "./img/img1.jpg";
 import img2 from "./img/img2.jpg";
-// Import only two images
-// import img3 from "./img/img3.jpg";
-// import img4 from "./img/img4.jpeg";
-// import img5 from "./img/img5.jpg";
-// import img6 from "./img/img6.jpeg";
-
 const columnStyle = {
   flex: 1,
   display: "flex",
@@ -32,7 +25,6 @@ const imageContainerStyle = {
   width: "80%",
   height: "90%",
   display: "flex",
-  // backgroundColor: "red",
   justifyContent: "center",
   alignItems: "center",
   borderRadius: "5px",
@@ -71,11 +63,35 @@ const hoveredCardStyle = {
   color: "white",
   cursor: "pointer",
 };
+const keyTranslations = {
+  DEPARTMENT: "Leitung",
+  CIQ: "Warteschleife",
+  LWT: "Längste Wartezeit",
+  OFFERED: "Gesamt",
+  ANS: "Angenommen",
+  ANS_RATE: "Angenommen %",
+  RDY: "Bereit",
+  TALK: "Im Gespräch",
+  NOT_RDY: "Nicht bereit",
+  ONLINE: "Angemeldet",
+};
+const orderedKeys = [
+  "DEPARTMENT",
+  "OFFERED",
+  "ANS",
+  "ANS_RATE",
+  "CIQ",
+  "LWT",
+  "ONLINE",
+  "RDY",
+  "TALK",
+  "NOT_RDY",
+];
 const App = () => {
   const [data, setData] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
-  const images = [img1, img2]; // Limit the array to two images
+  const images = [img1, img2];
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -120,23 +136,11 @@ const App = () => {
     setHoveredCardIndex(null);
   };
   const renderColumn = (items, department) => {
-    const orderedKeys = [
-      "DEPARTMENT",
-      "CIQ",
-      "LWT",
-      "OFFERED",
-      "ANS",
-      "ANS_RATE",
-      "RDY",
-      "TALK",
-      "NOT_RDY",
-      "ONLINE",
-    ];
     return (
       <div style={columnStyle}>
         {items.map((item, index) => {
           const orderedItems = orderedKeys.map((key) => ({
-            key,
+            key: keyTranslations[key] || key,
             value: item[key],
           }));
           return orderedItems.map((orderedItem, subIndex) =>
@@ -154,7 +158,6 @@ const App = () => {
   const reservationItems = data.filter(
     (item) => item.DEPARTMENT === "Reservation"
   );
-  // const groupItems = data.filter((item) => item.DEPARTMENT === "Group");
   return (
     <div style={containerStyle}>
       <div style={imageContainerStyle}>
@@ -172,40 +175,9 @@ const App = () => {
         <div style={dataContainerStyle}>
           {renderColumn(reservationItems, "Reservation")}
           {renderColumn(queryItems, "Query")}
-          {/* {renderColumn(groupItems, "Group")} */}
         </div>
       )}
     </div>
   );
 };
 export default App;
-
-
-please arrange the data in this order
-Department
-Offered
-ANS
-ANS_Rate
-CIQ
-LWT
-Online
-RDY
-Talk
-NOT RDY
-
-and traslate the key to the respective ones provided below
-
-"Department" to "Leitung" 
-"CIQ" to "Warteschleife"
-"LWT" to "Längste Wartezeit"
-"Offered" to "Gesamt"
-"ANS" to "Angenommen"
-"ANS_Rate" to "Angenommen %"
-"RDY" to "Bereit" 
-"Talk" to "Im Gespräch"
-"NOT_RDY" to "Nicht bereit" 
-"Online" stays "Angemeldet
-
-
-
-
