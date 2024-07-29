@@ -1,213 +1,3 @@
-// import React, { useState, useEffect } from "react";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-// function Header({ onLogout }) {
-//   const [currentTime, setCurrentTime] = useState(new Date());
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setCurrentTime(new Date());
-//     }, 1000);
-//     return () => clearInterval(timer);
-//   }, []);
-//   const headerStyle = {
-//     color: "white",
-//     backgroundColor: "#00008B",
-//     padding: "10px",
-//     height: "50px",
-//     display: "flex",
-//     alignItems: "center",
-//     fontSize: "40px",
-
-//     justifyContent: "space-between",
-//   };
-//   const formatDate = (date) => {
-//     const day = String(date.getDate()).padStart(2, "0");
-//     const month = String(date.getMonth() + 1).padStart(2, "0");
-//     const year = date.getFullYear();
-//     return `${day}.${month}.${year}`;
-//   };
-//   const formatTime = (date) => {
-//     return date.toLocaleTimeString("en-GB"); // en-GB locale for 24-hour format
-//   };
-//   const iconStyle = {
-//     marginLeft: "20px",
-//     fontSize: "30px",
-//     color: "white",
-//     cursor: "pointer",
-//   };
-//   const iconHoverStyle = {
-//     color: "#c9302c",
-//   };
-//   return (
-//     <div style={headerStyle}>
-//       <div style={{ paddingLeft: "60px", paddingBottom: "5px" }}>
-//         Reservation, Queries and Group
-//       </div>
-//       <div style={{ paddingRight: "60px", paddingBottom: "5px" }}>
-//         {formatDate(currentTime)}&nbsp;&nbsp;{formatTime(currentTime)}
-//         <FontAwesomeIcon
-//           icon={faSignOutAlt}
-//           style={iconStyle}
-//           data-tip="Sign out"
-//           onMouseOver={(e) => (e.target.style.color = iconHoverStyle.color)}
-//           onMouseOut={(e) => (e.target.style.color = iconStyle.color)}
-//           onClick={onLogout}
-//         />
-//       </div>
-//     </div>
-//   );
-// }
-// export default Header;
-
-// import React, { useState, useEffect } from "react";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-// function Header({ onLogout }) {
-//   const [currentTime, setCurrentTime] = useState(new Date());
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setCurrentTime(new Date());
-//     }, 1000);
-//     return () => clearInterval(timer);
-//   }, []);
-//   const headerStyle = {
-//     color: "white",
-//     backgroundColor: "#00008B",
-//     padding: "10px",
-//     height: "50px",
-//     display: "flex",
-//     alignItems: "center",
-//     fontSize: "40px",
-//     justifyContent: "space-between",
-//   };
-//   const formatDate = (date) => {
-//     const day = String(date.getDate()).padStart(2, "0");
-//     const month = String(date.getMonth() + 1).padStart(2, "0");
-//     const year = date.getFullYear();
-//     return `${day}.${month}.${year}`;
-//   };
-//   const formatTime = (date) => {
-//     return date.toLocaleTimeString("en-GB"); // en-GB locale for 24-hour format
-//   };
-//   const iconStyle = {
-//     marginLeft: "20px",
-//     fontSize: "30px",
-//     color: "white",
-//     cursor: "pointer",
-//   };
-//   const iconHoverStyle = {
-//     color: "#c9302c",
-//   };
-//   return (
-//     <div style={headerStyle}>
-//       <div style={{ paddingLeft: "60px", paddingBottom: "5px" }}>
-//         Wallboard-Germany
-//       </div>
-//       <div style={{ paddingRight: "60px", paddingBottom: "5px" }}>
-//         {formatDate(currentTime)}&nbsp;&nbsp;{formatTime(currentTime)}
-//         <FontAwesomeIcon
-//           icon={faSignOutAlt}
-//           style={iconStyle}
-//           onMouseOver={(e) =>
-//             (e.currentTarget.style.color = iconHoverStyle.color)
-//           }
-//           onMouseOut={(e) => (e.currentTarget.style.color = iconStyle.color)}
-//           onClick={onLogout}
-//         />
-//       </div>
-//     </div>
-//   );
-// }
-// export default Header;
-
-import React, { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-function Header({ onLogout }) {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isHovered, setIsHovered] = useState(false);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-  const headerStyle = {
-    color: "white",
-    backgroundColor: "#820882",
-    padding: "10px",
-    height: "50px",
-    display: "flex",
-    alignItems: "center",
-    fontSize: "40px",
-    width: "98vw",
-    justifyContent: "space-between",
-  };
-  const formatDate = (date) => {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  };
-  const formatTime = (date) => {
-    return date.toLocaleTimeString("en-GB");
-  };
-  const iconContainerStyle = {
-    display: "flex",
-    alignItems: "center",
-    marginRight: "40px",
-  };
-  const iconStyle = {
-    marginLeft: "20px",
-    fontSize: "30px",
-    color: "white",
-    cursor: "pointer",
-  };
-  const iconHoverStyle = {
-    color: "#c9302c",
-  };
-  const logoutTextStyle = {
-    fontSize: "10px",
-    // marginLeft: "5px",
-    visibility: isHovered ? "visible" : "hidden",
-  };
-  return (
-    <div style={headerStyle}>
-      <div style={{ paddingLeft: "60px", paddingBottom: "5px", width: "100%" }}>
-        Anrufstatistik
-      </div>
-      <div style={iconContainerStyle}>
-        <div>
-          {formatDate(currentTime)}&nbsp;&nbsp;{formatTime(currentTime)}
-        </div>
-        <div
-          style={logoutTextStyle}
-          onMouseOver={() => setIsHovered(true)}
-          onMouseOut={() => setIsHovered(false)}
-          onClick={onLogout}
-        >
-          Logout
-        </div>
-        <FontAwesomeIcon
-          icon={faSignOutAlt}
-          style={iconStyle}
-          onMouseOver={(e) => {
-            e.currentTarget.style.color = iconHoverStyle.color;
-            setIsHovered(true);
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.color = iconStyle.color;
-            setIsHovered(false);
-          }}
-          onClick={onLogout}
-        />
-      </div>
-    </div>
-  );
-}
-export default Header;
-
-
 import React, { useEffect, useState } from "react";
 import Header from "./Header";
 import img1 from "./img/img1.jpg";
@@ -218,7 +8,7 @@ const columnStyle = {
   flexDirection: "column",
   marginTop: "10px",
   marginLeft: "10px",
-  gap: "14px",
+  gap: "1px",
   justifyContent: "center",
   alignItems: "center",
 };
@@ -227,7 +17,8 @@ const containerStyle = {
   alignItems: "flex-start",
   color: "#333",
   padding: "20px",
-  height: "81.9vh",
+  height: "80.9vh",
+  width: "100vw",
   boxSizing: "border-box",
   // overflow: "hidden",
 };
@@ -251,8 +42,9 @@ const dataContainerStyle = {
   flexDirection: "row",
   justifyContent: "space-between",
   width: "100%",
-  height: "90%",
+  height: "100%",
   marginLeft: "10px",
+  fontSize: "50px",
   marginTop: "20px",
 };
 const cardStyle = {
@@ -262,10 +54,12 @@ const cardStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  height: "60px",
+  height: "40px",
   color: "#fff",
-  fontSize: "15px",
-  width: "500px",
+  fontSize: "28.2px",
+  // width: "600px",
+  width: "90%",
+  fontWeight: "700",
   transition: "background-color 0.3s ease",
 };
 const hoveredCardStyle = {
@@ -391,31 +185,13 @@ const App = () => {
   );
 };
 export default App;
-this is dashboard .js above one
 
-import React from "react";
-import "./App.css";
-function ReservationCenterHeader() {
-  const footerStyle = {
-    color: "white",
-    // Dark blue color
-    backgroundColor: "#820882",
-    // Adjust font size as needed
-    padding: "10px",
-    height: "4.7vh",
-    display: "flex",
-    alignItems: "flex-start",
-    fontSize: "24px",
-  };
 
-  const Marquee = ({ text }) => {
-    return (
-      <div className="marquee">
-        <span>{text}</span>
-      </div>
-    );
-  };
-  return <div style={footerStyle}></div>;
-}
-export default ReservationCenterHeader;
-above in is footer, do not change any naming conventions
+there is a new metric, which is LOST_CALLs in the api
+
+this is the api response
+{"statusCode":200,"body":[[{"ANS_RATE":0,"OFFERED":0,"LOST_CALLS":0,"ANS":0,"RDY":0,"ONLINE":0,"NOT_RDY":0,"TALK":0,"LWT":"0:0","CIQ":0,"DEPARTMENT":"Queries"}],[{"ANS_RATE":0,"OFFERED":0,"LOST_CALLS":0,"ANS":0,"RDY":0,"ONLINE":0,"NOT_RDY":0,"TALK":0,"LWT":"0:0","CIQ":0,"DEPARTMENT":"Reservation"}],[{"ANS_RATE":0,"OFFERED":0,"LOST_CALLS":0,"ANS":0,"RDY":0,"ONLINE":0,"NOT_RDY":0,"TALK":0,"LWT":"0:0","CIQ":0,"DEPARTMENT":"Group"}]]}
+
+and LOST_CALLS cars should be in between LWT and online and german translation of LOST_CALS is Verpasst.
+
+please do not change anything else
