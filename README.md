@@ -1,215 +1,411 @@
-import React, { useEffect, useState } from "react";
-import Header from "./Header";
-// Import the local images
-import img1 from "./img/img1.jpg";
-import img2 from "./img/img2.jpg";
-import img3 from "./img/img3.jpg";
-import img4 from "./img/img4.jpeg";
-import img5 from "./img/img5.jpg";
-import img6 from "./img/img6.jpeg";
-const columnStyle = {
-  flex: 1,
-  display: "flex",
-  flexDirection: "column",
-  marginTop: "10px",
-  marginLeft: "10px",
-  gap: "4px",
-  justifyContent: "center",
-  alignItems: "center",
-};
-const containerStyle = {
-  display: "flex",
-  alignItems: "flex-start",
-  color: "#333",
-  padding: "20px",
-  height: "80.9vh",
-  boxSizing: "border-box",
-  // overflow: "hidden",
-};
-const imageContainerStyle = {
-  width: "80%",
-  height: "90%",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  borderRadius: "5px",
-  marginLeft: "10px",
-  marginTop: "25px",
-};
-const imageStyle = {
-  width: "100%",
-  height: "100%",
-  borderRadius: "5px",
-};
-const dataContainerStyle = {
-  display: "flex",
-  flexDirection: "row",
-  justifyContent: "space-between",
-  width: "100%",
-  height: "90%",
-  marginLeft: "10px",
-  marginTop: "50px",
-};
-const cardStyle = {
-  position: "relative",
-  bottom: "10px",
-  backgroundColor: "#064b84",
-  padding: "9px",
-  borderRadius: "5px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  height: "30px",
-  color: "#fff",
-  fontSize: "43px",
-  width: "380px",
-  fontWeight: "600",
-  transition: "background-color 0.3s ease",
-};
-const departmentCardStyle = {
-  ...cardStyle,
-  justifyContent: "flex-start",
-  paddingLeft: "10px",
-};
-const hoveredCardStyle = {
-  backgroundColor: "#ADD8E6",
-  color: "Black",
-  cursor: "pointer",
-};
-const App = () => {
-  const [data, setData] = useState([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
-  const images = [img1, img2, img3, img4, img5, img6];
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          "https://whed26aw2a.execute-api.eu-west-2.amazonaws.com/UAT"
-        );
-        const responseData = await response.json();
-        console.log(responseData);
-        setData(responseData.body.flat());
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, []);
-  useEffect(() => {
-    const imageRotationInterval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 5000);
-    return () => clearInterval(imageRotationInterval);
-  }, [images.length]);
-  const getFontSize = (value) => {
-    if (value.length > 10) {
-      return "30px";
-    } else if (value.length > 5) {
-      return "35px";
-    }
-    return "43px";
-  };
-  const renderCard = (
-    label,
-    value,
-    index,
-    style = cardStyle,
-    isFirstCard = false
-  ) => (
-    <div
-      key={index}
-      style={{
-        ...style,
-        ...(hoveredCardIndex === index ? hoveredCardStyle : null),
-        fontSize: isFirstCard ? "43px" : getFontSize(value.toString()),
-      }}
-      onMouseEnter={() => handleMouseEnter(index)}
-      onMouseLeave={() => handleMouseLeave()}
-    >
-      <span>{label && `${label}:`}</span>
-      <span>{value}</span>
-    </div>
-  );
-  const handleMouseEnter = (index) => {
-    setHoveredCardIndex(index);
-  };
-  const handleMouseLeave = () => {
-    setHoveredCardIndex(null);
-  };
-  const renderColumn = (items, department) => {
-    const orderedKeys = [
-      "CIQ",
-      "LWT",
-      "OFFERED",
-      "ANS",
-      "ANS_RATE",
-      "RDY",
-      "TALK",
-      "NOT_RDY",
-      "ONLINE",
-    ];
-    return (
-      <div style={columnStyle}>
-        {items.map((item, index) => {
-          const orderedItems = orderedKeys.map((key) => ({
-            key,
-            value: item[key],
-          }));
-          return (
-            <React.Fragment key={index}>
-              {renderCard(
-                null,
-                item["DEPARTMENT"],
-                `${department}-${index}-department`,
-                departmentCardStyle,
-                true // Ensure the first card value has a font size of 43px
-              )}
-              {orderedItems.map((orderedItem, subIndex) =>
-                renderCard(
-                  orderedItem.key,
-                  orderedItem.value,
-                  `${department}-${index}-${subIndex}`
-                )
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    );
-  };
-  const reservationItems = data.filter(
-    (item) => item.DEPARTMENT === "Reservation Centre"
-  );
-  const guestRelationsItems = data.filter(
-    (item) => item.DEPARTMENT === "Guest Relations"
-  );
-  const restaurantItems = data.filter(
-    (item) => item.DEPARTMENT === "Restaurant"
-  );
-  return (
-    <div style={containerStyle}>
-      <div style={imageContainerStyle}>
-        {images.length > 0 ? (
-          <img
-            src={images[currentImageIndex]}
-            alt="Carousel"
-            style={imageStyle}
-          />
-        ) : (
-          <span>Upload Image</span>
-        )}
-      </div>
-      {data.length > 0 && (
-        <div style={dataContainerStyle}>
-          {renderColumn(reservationItems, "Reservation center")}
-          {renderColumn(guestRelationsItems, "Guest Relations")}
-          {/* {renderColumn(restaurantItems, "Restaurant")} */}
-        </div>
-      )}
-    </div>
-  );
-};
-export default App;
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template for Voice-To-Chat Solution
+
+Parameters:
+  LambdaExecutionRole:
+    Type: String
+    Description: ARN of the IAM role for Lambda execution
+  EmailIdentityArn:
+    Type: String
+    Description: ARN of the SES email identity for Pinpoint email channel
+
+Resources:
+  ConnectInstance:
+    Type: AWS::Connect::Instance
+    Properties:
+      IdentityManagementType: CONNECT_MANAGED
+      InstanceAlias: VoiceToChatInstance
+
+  ConnectContactFlow:
+    Type: AWS::Connect::ContactFlow
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      Name: VoiceToChatFlow
+      Content: >
+        {
+          "Version": "2019-10-30",
+          "StartAction": "1ff34355-4c6a-42fb-8e71-627d4ffcde6a",
+          "Metadata": {
+            "entryPointPosition": {
+              "x": 1114.4,
+              "y": 41.6
+            },
+            "ActionMetadata": {
+              "c3d3116b-4833-414d-85c7-54d7ba28ce0a": {
+                "position": {
+                  "x": 3432.8,
+                  "y": 5.6
+                }
+              },
+              "51925f2b-42d6-4172-8dcc-c794be502eff": {
+                "position": {
+                  "x": 3142.4,
+                  "y": -166.4
+                }
+              },
+              "a4893b51-4ae1-44ba-8127-0ad84b24d220": {
+                "position": {
+                  "x": 4043.2,
+                  "y": 12
+                }
+              },
+              "053786fc-1a9d-49bb-9f3b-0615313e7475": {
+                "position": {
+                  "x": 2664.8,
+                  "y": -164
+                },
+                "parameters": {
+                  "LambdaFunctionARN": {
+                    "displayName": "Voice-to-chat-transfer"
+                  }
+                },
+                "dynamicMetadata": {
+                  "check": false
+                }
+              },
+              "a403434c-d7b9-4cd6-80c3-ce76d77112ea": {
+                "position": {
+                  "x": 1862.4,
+                  "y": 4.8
+                }
+              },
+              "1ff34355-4c6a-42fb-8e71-627d4ffcde6a": {
+                "position": {
+                  "x": 1432.8,
+                  "y": 13.6
+                }
+              },
+              "fbd09b5a-c04e-46c9-900f-3bcbfb693913": {
+                "position": {
+                  "x": 2665.6,
+                  "y": 330.4
+                }
+              },
+              "4750120e-10b0-4cd8-92af-664d52233b80": {
+                "position": {
+                  "x": 3153.6,
+                  "y": 368.8
+                }
+              },
+              "24d5690d-cdfc-4e17-a84f-d018629c7cf8": {
+                "position": {
+                  "x": 3149.6,
+                  "y": 103.2
+                }
+              },
+              "3b2ac413-3ab7-4702-8545-8d4e416da148": {
+                "position": {
+                  "x": 2269.6,
+                  "y": -42.4
+                },
+                "conditionMetadata": [
+                  {
+                    "id": "e1066e78-0c96-4241-9280-1a0bc90c68d5",
+                    "value": "1"
+                  },
+                  {
+                    "id": "9ee4d5d3-ede3-451a-8797-6974299d1592",
+                    "value": "2"
+                  }
+                ]
+              },
+              "3de54805-ed88-465a-b9d7-ced52cd08303": {
+                "position": {
+                  "x": 2676,
+                  "y": 100.8
+                },
+                "parameters": {
+                  "LambdaFunctionARN": {
+                    "displayName": "Voice-to-chat-transfer"
+                  }
+                },
+                "dynamicMetadata": {
+                  "check": false
+                }
+              }
+            }
+          },
+          "Actions": [
+            {
+              "Parameters": {
+                "Text": "lambda error"
+              },
+              "Identifier": "c3d3116b-4833-414d-85c7-54d7ba28ce0a",
+              "Type": "MessageParticipant",
+              "Transitions": {
+                "NextAction": "a4893b51-4ae1-44ba-8127-0ad84b24d220",
+                "Errors": [
+                  {
+                    "NextAction": "a4893b51-4ae1-44ba-8127-0ad84b24d220",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            },
+            {
+              "Parameters": {
+                "Text": "You will receive a chat bot link for the chat channel to your registered Email. Please attempt to click the link so that you can use the chatbot.\nThank you for calling have a nice day."
+              },
+              "Identifier": "51925f2b-42d6-4172-8dcc-c794be502eff",
+              "Type": "MessageParticipant",
+              "Transitions": {
+                "NextAction": "a4893b51-4ae1-44ba-8127-0ad84b24d220",
+                "Errors": [
+                  {
+                    "NextAction": "c3d3116b-4833-414d-85c7-54d7ba28ce0a",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            },
+            {
+              "Parameters": {},
+              "Identifier": "a4893b51-4ae1-44ba-8127-0ad84b24d220",
+              "Type": "DisconnectParticipant",
+              "Transitions": {}
+            },
+            {
+              "Parameters": {
+                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:768637739934:function:Voice-to-chat-transfer",
+                "InvocationTimeLimitSeconds": "3",
+                "LambdaInvocationAttributes": {
+                  "check": "email"
+                },
+                "ResponseValidation": {
+                  "ResponseType": "STRING_MAP"
+                }
+              },
+              "Identifier": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+              "Type": "InvokeLambdaFunction",
+              "Transitions": {
+                "NextAction": "51925f2b-42d6-4172-8dcc-c794be502eff",
+                "Errors": [
+                  {
+                    "NextAction": "a4893b51-4ae1-44ba-8127-0ad84b24d220",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            },
+            {
+              "Parameters": {
+                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:768637739934:function:Voice-to-chat-transfer",
+                "InvocationTimeLimitSeconds": "3",
+                "LambdaInvocationAttributes": {
+                  "check": "email"
+                },
+                "ResponseValidation": {
+                  "ResponseType": "STRING_MAP"
+                }
+              },
+              "Identifier": "3de54805-ed88-465a-b9d7-ced52cd08303",
+              "Type": "InvokeLambdaFunction",
+              "Transitions": {
+                "NextAction": "3b2ac413-3ab7-4702-8545-8d4e416da148",
+                "Errors": [
+                  {
+                    "NextAction": "fbd09b5a-c04e-46c9-900f-3bcbfb693913",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            },
+            {
+              "Parameters": {
+                "AttributeName": "FirstName",
+                "Condition": "Equals",
+                "Value": "Email"
+              },
+              "Identifier": "3b2ac413-3ab7-4702-8545-8d4e416da148",
+              "Type": "CheckContactAttributes",
+              "Transitions": {
+                "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                "Conditions": [
+                  {
+                    "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                    "Condition": "Equal",
+                    "Value": "1"
+                  },
+                  {
+                    "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                    "Condition": "Equal",
+                    "Value": "2"
+                  }
+                ],
+                "Default": "fbd09b5a-c04e-46c9-900f-3bcbfb693913"
+              },
+              "Errors": [
+                {
+                  "NextAction": "fbd09b5a-c04e-46c9-900f-3bcbfb693913",
+                  "ErrorType": "NoMatchingError"
+                }
+              ]
+            },
+            {
+              "Parameters": {
+                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:768637739934:function:Voice-to-chat-transfer",
+                "InvocationTimeLimitSeconds": "3",
+                "LambdaInvocationAttributes": {
+                  "check": "email"
+                },
+                "ResponseValidation": {
+                  "ResponseType": "STRING_MAP"
+                }
+              },
+              "Identifier": "fbd09b5a-c04e-46c9-900f-3bcbfb693913",
+              "Type": "InvokeLambdaFunction",
+              "Transitions": {
+                "NextAction": "51925f2b-42d6-4172-8dcc-c794be502eff",
+                "Errors": [
+                  {
+                    "NextAction": "4750120e-10b0-4cd8-92af-664d52233b80",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            },
+            {
+              "Parameters": {
+                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:768637739934:function:Voice-to-chat-transfer",
+                "InvocationTimeLimitSeconds": "3",
+                "LambdaInvocationAttributes": {
+                  "check": "email"
+                },
+                "ResponseValidation": {
+                  "ResponseType": "STRING_MAP"
+                }
+              },
+              "Identifier": "4750120e-10b0-4cd8-92af-664d52233b80",
+              "Type": "InvokeLambdaFunction",
+              "Transitions": {
+                "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                "Errors": [
+                  {
+                    "NextAction": "51925f2b-42d6-4172-8dcc-c794be502eff",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            },
+            {
+              "Parameters": {
+                "AttributeName": "FirstName",
+                "Condition": "Equals",
+                "Value": "Email"
+              },
+              "Identifier": "24d5690d-cdfc-4e17-a84f-d018629c7cf8",
+              "Type": "CheckContactAttributes",
+              "Transitions": {
+                "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                "Conditions": [
+                  {
+                    "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                    "Condition": "Equal",
+                    "Value": "1"
+                  },
+                  {
+                    "NextAction": "053786fc-1a9d-49bb-9f3b-0615313e7475",
+                    "Condition": "Equal",
+                    "Value": "2"
+                  }
+                ],
+                "Default": "fbd09b5a-c04e-46c9-900f-3bcbfb693913"
+              },
+              "Errors": [
+                {
+                  "NextAction": "fbd09b5a-c04e-46c9-900f-3bcbfb693913",
+                  "ErrorType": "NoMatchingError"
+                }
+              ]
+            },
+            {
+              "Parameters": {
+                "LambdaFunctionARN": "arn:aws:lambda:us-east-1:768637739934:function:Voice-to-chat-transfer",
+                "InvocationTimeLimitSeconds": "3",
+                "LambdaInvocationAttributes": {
+                  "check": "email"
+                },
+                "ResponseValidation": {
+                  "ResponseType": "STRING_MAP"
+                }
+              },
+              "Identifier": "4750120e-10b0-4cd8-92af-664d52233b80",
+              "Type": "InvokeLambdaFunction",
+              "Transitions": {
+                "NextAction": "51925f2b-42d6-4172-8dcc-c794be502eff",
+                "Errors": [
+                  {
+                    "NextAction": "c3d3116b-4833-414d-85c7-54d7ba28ce0a",
+                    "ErrorType": "NoMatchingError"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Voice-to-chat-transfer
+      Handler: index.handler
+      Role: !Ref LambdaExecutionRole
+      Code:
+        S3Bucket: voice-to-chat-lambda-solution
+        S3Key: Voice-to-chat-transfer-2b6ec221-f880-43a1-af57-544ebd835c7b.zip
+      Runtime: python3.10
+      Timeout: 15
+
+  PinpointApp:
+    Type: AWS::Pinpoint::App
+    Properties:
+      Name: voice-to-chat
+
+  PinpointEmailChannel:
+    Type: AWS::Pinpoint::EmailChannel
+    Properties:
+      ApplicationId: !Ref PinpointApp
+      FromAddress: ati.pat85@outlook.com
+      Identity: !Ref EmailIdentityArn
+      RoleArn: !Ref LambdaExecutionRole
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: voice-to-chat-widget-new
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: S3Origin
+            S3OriginConfig: {}
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+        DefaultRootObject: index.html
+
+Outputs:
+  ConnectInstanceId:
+    Description: "Connect instance ID"
+    Value: !Ref ConnectInstance
+  ConnectContactFlowId:
+    Description: "Connect contact flow ID"
+    Value: !Ref ConnectContactFlow
+  LambdaFunctionArn:
+    Description: "Lambda function ARN"
+    Value: !GetAtt LambdaFunction.Arn
+  PinpointAppId:
+    Description: "Pinpoint app ID"
+    Value: !Ref PinpointApp
+  S3BucketName:
+    Description: "S3 bucket name"
+    Value: !Ref S3Bucket
+  CloudFrontDistributionId:
+    Description: "CloudFront distribution ID"
+    Value: !Ref CloudFrontDistribution
