@@ -39,9 +39,8 @@ Resources:
     Properties:
       IdentityManagementType: CONNECT_MANAGED
       InstanceAlias: VoiceToChatInstance
-      Attributes:
-        InboundCallsEnabled: true
-        OutboundCallsEnabled: true
+      # Removed InboundCallsEnabled and OutboundCallsEnabled attributes
+      Attributes: {}  # You can leave this empty or define other valid attributes if necessary
 
   ConnectContactFlow:
     Type: AWS::Connect::ContactFlow
@@ -436,23 +435,5 @@ Outputs:
   CloudFrontDistributionId:
     Description: "CloudFront distribution ID"
     Value: !Ref CloudFrontDistribution
-
-
-
-
-Validation failed for following resources: [ConnectInstance]. Rollback requested by user.
-2024-08-26 14:06:10 UTC+0530
-ConnectInstance
-CREATE_FAILED
-VALIDATION_FAILED
-Properties validation failed for resource ConnectInstance with message: [#/Attributes: extraneous key [InboundCallsEnabled] is not permitted, #/Attributes: extraneous key [OutboundCallsEnabled] is not permitted]
-2024-08-26 14:06:07 UTC+0530
-voice-to-chat-model
-CREATE_IN_PROGRESS
--
-User Initiated
-
-
-it says this error
 
 ```
