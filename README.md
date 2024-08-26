@@ -3,14 +3,37 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Template for Voice-To-Chat Solution
 
 Parameters:
-  LambdaExecutionRole:
-    Type: String
-    Description: ARN of the IAM role for Lambda execution
   EmailIdentityArn:
     Type: String
     Description: ARN of the SES email identity for Pinpoint email channel
 
 Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: VoiceToChatLambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ses:SendEmail
+                  - ses:SendTemplatedEmail
+                  - pinpoint:SendMessages
+                Resource: "*"
+
   ConnectInstance:
     Type: AWS::Connect::Instance
     Properties:
@@ -346,13 +369,14 @@ Resources:
               }
             }
           ]
+        }
 
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: Voice-to-chat-transfer
       Handler: index.handler
-      Role: !Ref LambdaExecutionRole
+      Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: voice-to-chat-lambda-solution
         S3Key: Voice-to-chat-transfer-2b6ec221-f880-43a1-af57-544ebd835c7b.zip
@@ -370,6 +394,47 @@ Resources:
       ApplicationId: !Ref PinpointApp
       FromAddress: ati.pat85@outlook.com
       Identity: !Ref EmailIdentityArn
-      RoleArn: !Ref LambdaExecution
+      RoleArn: !GetAtt LambdaExecutionRole.Arn
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: voice-to-chat-widget-new
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: S3Origin
+            S3OriginConfig: {}
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+        DefaultRootObject: index.html
+
+Outputs:
+  ConnectInstanceId:
+    Description: "Connect instance ID"
+    Value: !Ref ConnectInstance
+  ConnectContactFlowId:
+    Description: "Connect contact flow ID"
+    Value: !Ref ConnectContactFlow
+  LambdaFunctionArn:
+    Description: "Lambda function ARN"
+    Value: !GetAtt LambdaFunction.Arn
+  PinpointAppId:
+    Description: "Pinpoint app ID"
+    Value: !Ref PinpointApp
+  S3BucketName:
+    Description: "S3 bucket name"
+    Value: !Ref S3Bucket
+  CloudFrontDistributionId:
+    Description: "CloudFront distribution ID"
+    Value: !Ref CloudFrontDistribution
 
 ```
