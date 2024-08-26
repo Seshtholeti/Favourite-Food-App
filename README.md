@@ -1,3 +1,4 @@
+```yaml
 AWSTemplateFormatVersion: 2010-09-09
 Description: Template for Voice-To-Chat Solution
 
@@ -15,6 +16,9 @@ Resources:
     Properties:
       IdentityManagementType: CONNECT_MANAGED
       InstanceAlias: VoiceToChatInstance
+      Attributes:
+        InboundCallsEnabled: true
+        OutboundCallsEnabled: true
 
   ConnectContactFlow:
     Type: AWS::Connect::ContactFlow
@@ -342,7 +346,6 @@ Resources:
               }
             }
           ]
-        }
 
   LambdaFunction:
     Type: AWS::Lambda::Function
@@ -367,69 +370,6 @@ Resources:
       ApplicationId: !Ref PinpointApp
       FromAddress: ati.pat85@outlook.com
       Identity: !Ref EmailIdentityArn
-      RoleArn: !Ref LambdaExecutionRole
+      RoleArn: !Ref LambdaExecution
 
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: voice-to-chat-widget-new
-
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Origins:
-          - DomainName: !GetAtt S3Bucket.DomainName
-            Id: S3Origin
-            S3OriginConfig: {}
-        Enabled: true
-        DefaultCacheBehavior:
-          TargetOriginId: S3Origin
-          ViewerProtocolPolicy: redirect-to-https
-          ForwardedValues:
-            QueryString: false
-        DefaultRootObject: index.html
-
-Outputs:
-  ConnectInstanceId:
-    Description: "Connect instance ID"
-    Value: !Ref ConnectInstance
-  ConnectContactFlowId:
-    Description: "Connect contact flow ID"
-    Value: !Ref ConnectContactFlow
-  LambdaFunctionArn:
-    Description: "Lambda function ARN"
-    Value: !GetAtt LambdaFunction.Arn
-  PinpointAppId:
-    Description: "Pinpoint app ID"
-    Value: !Ref PinpointApp
-  S3BucketName:
-    Description: "S3 bucket name"
-    Value: !Ref S3Bucket
-  CloudFrontDistributionId:
-    Description: "CloudFront distribution ID"
-    Value: !Ref CloudFrontDistribution
-
-
-The following resource(s) failed to create: [PinpointApp, LambdaFunction, S3Bucket, ConnectInstance]. Rollback requested by user.
-2024-08-22 12:51:23 UTC+0530
-PinpointApp
-CREATE_FAILED
--
-Resource creation cancelled
-2024-08-22 12:51:23 UTC+0530
-LambdaFunction
-CREATE_FAILED
--
-Resource creation cancelled
-2024-08-22 12:51:23 UTC+0530
-S3Bucket
-CREATE_FAILED
--
-Resource creation cancelled
-2024-08-22 12:51:23 UTC+0530
-ConnectInstance
-CREATE_FAILED
--
-Properties validation failed for resource ConnectInstance with message: #: required key [Attributes] not found
-this is the error I am getting
+```
