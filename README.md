@@ -1,22 +1,18 @@
+```yaml
 AWSTemplateFormatVersion: 2010-09-09
 Description: Template for Voice-To-Chat Solution
 
 Parameters:
   ConnectInstanceArn:
     Type: String
-    Description: ARN of the existing Connect instance
   LambdaExecutionRole:
     Type: String
-    Description: ARN of the IAM role for Lambda execution
   EmailIdentityArn:
     Type: String
-    Description: ARN of the SES email identity for Pinpoint email channel
   ContactFlowS3Bucket:
     Type: String
-    Description: Name of the S3 bucket where the contact flow JSON is stored
   ContactFlowS3Key:
     Type: String
-    Description: S3 key of the contact flow JSON file
 
 Resources:
   ConnectContactFlow:
@@ -25,11 +21,11 @@ Resources:
       InstanceArn: !Ref ConnectInstanceArn
       Name: VoiceToChatFlow
       Type: CONTACT_FLOW
-      Content:
-        Fn::Transform:
-          Name: "AWS::Include"
-          Parameters:
-            Location: !Sub "s3://${ContactFlowS3Bucket}/${ContactFlowS3Key}"
+      Fn::Transform:
+        Name: "AWS::Include"
+        Parameters:
+          Location: !Sub "s3://${ContactFlowS3Bucket}/${ContactFlowS3Key}"
+
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -92,3 +88,5 @@ Outputs:
   CloudFrontDistributionId:
     Description: "CloudFront distribution ID"
     Value: !Ref CloudFrontDistribution
+
+```
