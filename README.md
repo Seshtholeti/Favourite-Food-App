@@ -15,20 +15,21 @@ Parameters:
     Type: String
 
 Resources:
-  ConnectContactFlowModule:
+  ConnectContactFlowModule1:
     Type: AWS::Connect::ContactFlowModule
     Properties:
       InstanceArn: !Ref ConnectInstanceArn
-      Name: VoiceToChatFlowModule
-      Fn::Transform:
-        Name: "AWS::Include"
-        Parameters:
-          Location: !Sub "s3://${ContactFlowModuleS3Bucket}/${ContactFlowModuleS3Key}"
+      Name: VoiceToChatFlowModule1
+      Content:
+        Fn::Transform:
+          Name: "AWS::Include"
+          Parameters:
+            Location: !Sub "s3://${ContactFlowModuleS3Bucket}/${ContactFlowModuleS3Key}"
 
-  LambdaFunction:
+  LambdaFunction1:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: Voice-to-chat-transfer-unique
+      FunctionName: Voice-to-chat-transfer-unique1
       Handler: index.handler
       Role: !Ref LambdaExecutionRole
       Code:
@@ -37,30 +38,30 @@ Resources:
       Runtime: python3.10
       Timeout: 15
 
-  PinpointApp:
+  PinpointApp1:
     Type: AWS::Pinpoint::App
     Properties:
-      Name: voice-to-chat
+      Name: voice-to-chat1
 
-  PinpointEmailChannel:
+  PinpointEmailChannel1:
     Type: AWS::Pinpoint::EmailChannel
     Properties:
-      ApplicationId: !Ref PinpointApp
+      ApplicationId: !Ref PinpointApp1
       FromAddress: ati.pat85@outlook.com  # Using the same email address as before
       Identity: !Ref EmailIdentityArn
       RoleArn: !Ref LambdaExecutionRole
 
-  S3Bucket:
+  S3Bucket1:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "my-unique-bucket-name-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+      BucketName: !Sub "my-unique-bucket-name-${AWS::AccountId}-${AWS::Region}-1"
 
-  CloudFrontDistribution:
+  CloudFrontDistribution1:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
         Origins:
-          - DomainName: !GetAtt S3Bucket.RegionalDomainName
+          - DomainName: !GetAtt S3Bucket1.RegionalDomainName
             Id: S3Origin
             S3OriginConfig: {}
         Enabled: true
@@ -72,20 +73,20 @@ Resources:
         DefaultRootObject: index.html
 
 Outputs:
-  ConnectContactFlowModuleId:
+  ConnectContactFlowModuleId1:
     Description: "Connect contact flow module ID"
-    Value: !Ref ConnectContactFlowModule
-  LambdaFunctionArn:
+    Value: !Ref ConnectContactFlowModule1
+  LambdaFunctionArn1:
     Description: "Lambda function ARN"
-    Value: !GetAtt LambdaFunction.Arn
-  PinpointAppId:
+    Value: !GetAtt LambdaFunction1.Arn
+  PinpointAppId1:
     Description: "Pinpoint app ID"
-    Value: !Ref PinpointApp
-  S3BucketName:
+    Value: !Ref PinpointApp1
+  S3BucketName1:
     Description: "S3 bucket name"
-    Value: !Ref S3Bucket
-  CloudFrontDistributionId:
+    Value: !Ref S3Bucket1
+  CloudFrontDistributionId1:
     Description: "CloudFront distribution ID"
-    Value: !Ref CloudFrontDistribution
+    Value: !Ref CloudFrontDistribution1
 
 ```
