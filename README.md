@@ -20,7 +20,6 @@ Resources:
     Properties:
       InstanceArn: !Ref ConnectInstanceArn
       Name: VoiceToChatFlowModule
-      Type: CONTACT_FLOW_MODULE
       Fn::Transform:
         Name: "AWS::Include"
         Parameters:
