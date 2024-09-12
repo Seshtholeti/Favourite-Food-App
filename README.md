@@ -19,12 +19,13 @@
 .ant-table th {
   background-color: #1890ff; /* Header color */
   color: white;
-  font-size: 18px; /* Increased font size */
+  font-size: 25px; /* Increased font size */
   font-weight: bold;
   padding: 12px;
 }
 .ant-table td {
   padding: 12px;
+  font-size: 20px;
 }
 .gold-row {
   background-color: #fffde7; /* Light yellow for gold */
