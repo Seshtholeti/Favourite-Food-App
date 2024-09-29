@@ -1,52 +1,58 @@
-[
-    {
-        "agent_id": "9783145b-f6e4-4d42-9414-eb8943c0d9aa",
-        "agent_sentiments_score": "-16",
-        "customer_sentiments_score": "0",
-        "agent_talk_time": "10323",
-        "agent_non_talk_time": "13271",
-        "agent_calls_count": "2",
-        "agent_name": "mohan",
-        "performance_score": 301
+{
+    "eventVersion": "1.09",
+    "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDA3F5TBEOPHDOWWS4HO",
+        "arn": "arn:aws:iam::768637739934:user/Seshu",
+        "accountId": "768637739934",
+        "accessKeyId": "ASIA3F5TBEOPK4Y2Q55O",
+        "userName": "Seshu",
+        "sessionContext": {
+            "attributes": {
+                "creationDate": "2024-09-29T13:52:03Z",
+                "mfaAuthenticated": "false"
+            }
+        },
+        "invokedBy": "cloudformation.amazonaws.com"
     },
-    {
-        "agent_id": "9783145b-f6e4-4d42-9414-eb8943c0d9as",
-        "agent_sentiments_score": "50",
-        "customer_sentiments_score": "10",
-        "agent_talk_time": "8762",
-        "agent_non_talk_time": "11082",
-        "agent_calls_count": "3",
-        "agent_name": "Seshu",
-        "performance_score": 208
+    "eventTime": "2024-09-29T14:24:33Z",
+    "eventSource": "connect.amazonaws.com",
+    "eventName": "CreateContactFlowModule",
+    "awsRegion": "us-east-1",
+    "sourceIPAddress": "cloudformation.amazonaws.com",
+    "userAgent": "cloudformation.amazonaws.com",
+    "errorCode": "InvalidContactFlowModuleException",
+    "requestParameters": {
+        "InstanceId": "arn%3Aaws%3Aconnect%3Aus-east-1%3A768637739934%3Ainstance%2Fbd16d991-11c8-4d1e-9900-edd5ed4a9b21",
+        "Content": "***",
+        "ClientToken": "ded5a5a5-dece-4446-9fd3-7e6c9e3a6719",
+        "Tags": {},
+        "Name": "VoiceToChatFlowModule"
     },
-    {
-        "agent_id": "9783145b-f6e4-4d42-9414-eb8943c0d9aw",
-        "agent_sentiments_score": "20",
-        "customer_sentiments_score": "40",
-        "agent_talk_time": "9262",
-        "agent_non_talk_time": "11342",
-        "agent_calls_count": "4",
-        "agent_name": "Devi",
-        "performance_score": 187
+    "responseElements": {
+        "Problems": [
+            {
+                "message": "Invalid Action property value. Path: Actions[1].Transitions.NextAction"
+            },
+            {
+                "message": "Invalid Action property value. Path: Actions[2].Transitions.NextAction"
+            },
+            {
+                "message": "Invalid Action property value. Path: Actions[2].Transitions.Errors[0].NextAction"
+            },
+            {
+                "message": "Invalid Action property value. Path: Actions[3].Transitions.NextAction"
+            },
+            {
+                "message": "Invalid Action property value. Path: Actions[3].Transitions.Errors[0].NextAction"
+            }
+        ]
     },
-    {
-        "agent_id": "9783145b-f6e4-4d42-9414-eb8943c0d9ar",
-        "agent_sentiments_score": "30",
-        "customer_sentiments_score": "20",
-        "agent_talk_time": "8342",
-        "agent_non_talk_time": "10182",
-        "agent_calls_count": "2",
-        "agent_name": "Rajiya",
-        "performance_score": 166
-    },
-    {
-        "agent_id": "872d83df-69ec-47ba-9458-5bfb3fa9970f",
-        "agent_sentiments_score": "55",
-        "customer_sentiments_score": "18",
-        "agent_talk_time": "8900",
-        "agent_non_talk_time": "10000",
-        "agent_calls_count": "2",
-        "agent_name": "Aniket",
-        "performance_score": 82
-    }
-]
+    "requestID": "70f72e9e-4cd4-467f-9f59-2ff23bae7da4",
+    "eventID": "cebcc045-82e0-4ba7-9f52-a480a7f349de",
+    "readOnly": false,
+    "eventType": "AwsApiCall",
+    "managementEvent": true,
+    "recipientAccountId": "768637739934",
+    "eventCategory": "Management"
+}
