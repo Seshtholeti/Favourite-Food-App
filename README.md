@@ -382,13 +382,11 @@ Resources:
    }
  }
 }
-
   # Pinpoint Application Resource
   PinpointApp:
     Type: AWS::Pinpoint::App
     Properties:
       Name: VoiceToChatApp
-
   # Pinpoint Email Channel Resource
   PinpointEmailChannel:
     Type: AWS::Pinpoint::EmailChannel
@@ -397,13 +395,27 @@ Resources:
       FromAddress: ati.pat85@outlook.com
       Identity: !Ref EmailIdentityArn
       RoleArn: !Ref LambdaExecutionRole
-
-  # S3 Bucket Resource for storing voice recordings
-  VoiceRecordingBucket:
+  # S3 Bucket Resource for storage
+  S3BucketForContactFlows:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "voice-to-chat-recordings-${AWS::AccountId}"
-
+      BucketName: my-unique-bucket-name-voice-to-chat
+  # CloudFront Distribution Resource for serving content securely
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt S3BucketForContactFlows.RegionalDomainName
+            Id: S3OriginForContactFlows
+            S3OriginConfig: {}
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: S3OriginForContactFlows
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+        DefaultRootObject: index.html
 Outputs:
   LambdaFunctionArn:
     Description: "ARN of the Lambda Function"
