@@ -362,4 +362,3 @@ Outputs:
     Value: !Ref CloudFrontDistribution
 
 
-```
