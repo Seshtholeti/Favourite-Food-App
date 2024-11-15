@@ -301,3 +301,29 @@ export const handler = async (event) => {
    }
  }
 };
+
+use list routingprofiles using this
+import { ConnectClient, ListRoutingProfilesCommand } from "@aws-sdk/client-connect"; // ES Modules import
+// const { ConnectClient, ListRoutingProfilesCommand } = require("@aws-sdk/client-connect"); // CommonJS import
+const client = new ConnectClient(config);
+const input = { // ListRoutingProfilesRequest
+  InstanceId: "STRING_VALUE", // required
+  NextToken: "STRING_VALUE",
+  MaxResults: Number("int"),
+};
+const command = new ListRoutingProfilesCommand(input);
+const response = await client.send(command);
+// { // ListRoutingProfilesResponse
+//   RoutingProfileSummaryList: [ // RoutingProfileSummaryList
+//     { // RoutingProfileSummary
+//       Id: "STRING_VALUE",
+//       Arn: "STRING_VALUE",
+//       Name: "STRING_VALUE",
+//       LastModifiedTime: new Date("TIMESTAMP"),
+//       LastModifiedRegion: "STRING_VALUE",
+//     },
+//   ],
+//   NextToken: "STRING_VALUE",
+// };
+
+store the routing profile ids in an array same like queues and assign it to the Routing profiles in agent metrics
