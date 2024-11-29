@@ -1,64 +1,135 @@
-Response
-{
-  "statusCode": 200,
-  "body": "{\"message\":\"Process completed successfully\",\"details\":[{\"phoneNumber\":\"+919949921498\",\"agentId\":\"Error\",\"disposition\":\"Error Fetching Record\"},{\"phoneNumber\":\"+918639694701\",\"agentId\":\"Error\",\"disposition\":\"Error Fetching Record\"}]}"
-}
+import { ConnectClient, GetContactAttributesCommand } from "@aws-sdk/client-connect"; // ES Modules import
+// const { ConnectClient, GetContactAttributesCommand } = require("@aws-sdk/client-connect"); // CommonJS import
+const client = new ConnectClient(config);
+const input = { // GetContactAttributesRequest
+  InstanceId: "STRING_VALUE", // required
+  InitialContactId: "STRING_VALUE", // required
+};
+const command = new GetContactAttributesCommand(input);
+const response = await client.send(command);
+// { // GetContactAttributesResponse
+//   Attributes: { // Attributes
+//     "<keys>": "STRING_VALUE",
+//   },
+// };
 
-Function Logs
-START RequestId: aa800c20-a3d4-442b-8204-58be012ff069 Version: $LATEST
-2024-11-29T02:01:15.594Z	aa800c20-a3d4-442b-8204-58be012ff069	ERROR	Error processing phone number +919949921498: BadRequestException: Invalid request body
-    at throwDefaultError (/var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:840:20)
-    at /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:849:5
-    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9806:14)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
-    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
-    at async Runtime.handler (file:///var/task/index.mjs:249:33) {
-  '$fault': 'client',
-  '$metadata': {
-    httpStatusCode: 400,
-    requestId: 'cfbfaebb-b4e4-45cf-9976-9afad79a3868',
-    extendedRequestId: undefined,
-    cfId: undefined,
-    attempts: 1,
-    totalRetryDelay: 0
-  }
-}
-2024-11-29T02:01:15.754Z	aa800c20-a3d4-442b-8204-58be012ff069	ERROR	Error processing phone number +918639694701: BadRequestException: Invalid request body
-    at throwDefaultError (/var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:840:20)
-    at /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:849:5
-    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9806:14)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
-    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
-    at async Runtime.handler (file:///var/task/index.mjs:249:33) {
-  '$fault': 'client',
-  '$metadata': {
-    httpStatusCode: 400,
-    requestId: '06be69aa-6146-46be-bdee-3a52cd72c3ee',
-    extendedRequestId: undefined,
-    cfId: undefined,
-    attempts: 1,
-    totalRetryDelay: 0
-  }
-}
-2024-11-29T02:01:15.754Z	aa800c20-a3d4-442b-8204-58be012ff069	INFO	Call Details: [
-  {
-    phoneNumber: '+919949921498',
-    agentId: 'Error',
-    disposition: 'Error Fetching Record'
+api syntax for GetCOntact.
+
+below is the syntax code for Searchcontact command
+import { ConnectClient, SearchContactsCommand } from "@aws-sdk/client-connect"; // ES Modules import
+// const { ConnectClient, SearchContactsCommand } = require("@aws-sdk/client-connect"); // CommonJS import
+const client = new ConnectClient(config);
+const input = { // SearchContactsRequest
+  InstanceId: "STRING_VALUE", // required
+  TimeRange: { // SearchContactsTimeRange
+    Type: "INITIATION_TIMESTAMP" || "SCHEDULED_TIMESTAMP" || "CONNECTED_TO_AGENT_TIMESTAMP" || "DISCONNECT_TIMESTAMP", // required
+    StartTime: new Date("TIMESTAMP"), // required
+    EndTime: new Date("TIMESTAMP"), // required
   },
-  {
-    phoneNumber: '+918639694701',
-    agentId: 'Error',
-    disposition: 'Error Fetching Record'
-  }
-]
-END RequestId: aa800c20-a3d4-442b-8204-58be012ff069
-REPORT RequestId: aa800c20-a3d4-442b-8204-58be012ff069	Duration: 1568.12 ms	Billed Duration: 1569 ms	Memory Size: 128 MB	Max Memory Used: 99 MB	Init Duration: 666.96 ms
+  SearchCriteria: { // SearchCriteria
+    AgentIds: [ // AgentResourceIdList
+      "STRING_VALUE",
+    ],
+    AgentHierarchyGroups: { // AgentHierarchyGroups
+      L1Ids: [ // HierarchyGroupIdList
+        "STRING_VALUE",
+      ],
+      L2Ids: [
+        "STRING_VALUE",
+      ],
+      L3Ids: [
+        "STRING_VALUE",
+      ],
+      L4Ids: [
+        "STRING_VALUE",
+      ],
+      L5Ids: [
+        "STRING_VALUE",
+      ],
+    },
+    Channels: [ // ChannelList
+      "VOICE" || "CHAT" || "TASK" || "EMAIL",
+    ],
+    ContactAnalysis: { // ContactAnalysis
+      Transcript: { // Transcript
+        Criteria: [ // TranscriptCriteriaList // required
+          { // TranscriptCriteria
+            ParticipantRole: "AGENT" || "CUSTOMER" || "SYSTEM" || "CUSTOM_BOT" || "SUPERVISOR", // required
+            SearchText: [ // SearchTextList // required
+              "STRING_VALUE",
+            ],
+            MatchType: "MATCH_ALL" || "MATCH_ANY", // required
+          },
+        ],
+        MatchType: "MATCH_ALL" || "MATCH_ANY",
+      },
+    },
+    InitiationMethods: [ // InitiationMethodList
+      "INBOUND" || "OUTBOUND" || "TRANSFER" || "QUEUE_TRANSFER" || "CALLBACK" || "API" || "DISCONNECT" || "MONITOR" || "EXTERNAL_OUTBOUND" || "WEBRTC_API" || "AGENT_REPLY" || "FLOW",
+    ],
+    QueueIds: [ // QueueIdList
+      "STRING_VALUE",
+    ],
+    SearchableContactAttributes: { // SearchableContactAttributes
+      Criteria: [ // SearchableContactAttributesCriteriaList // required
+        { // SearchableContactAttributesCriteria
+          Key: "STRING_VALUE", // required
+          Values: [ // SearchableContactAttributeValueList // required
+            "STRING_VALUE",
+          ],
+        },
+      ],
+      MatchType: "MATCH_ALL" || "MATCH_ANY",
+    },
+    SearchableSegmentAttributes: { // SearchableSegmentAttributes
+      Criteria: [ // SearchableSegmentAttributesCriteriaList // required
+        { // SearchableSegmentAttributesCriteria
+          Key: "STRING_VALUE", // required
+          Values: [ // SearchableSegmentAttributeValueList // required
+            "STRING_VALUE",
+          ],
+        },
+      ],
+      MatchType: "MATCH_ALL" || "MATCH_ANY",
+    },
+  },
+  MaxResults: Number("int"),
+  NextToken: "STRING_VALUE",
+  Sort: { // Sort
+    FieldName: "INITIATION_TIMESTAMP" || "SCHEDULED_TIMESTAMP" || "CONNECTED_TO_AGENT_TIMESTAMP" || "DISCONNECT_TIMESTAMP" || "INITIATION_METHOD" || "CHANNEL", // required
+    Order: "ASCENDING" || "DESCENDING", // required
+  },
+};
+const command = new SearchContactsCommand(input);
+const response = await client.send(command);
+// { // SearchContactsResponse
+//   Contacts: [ // Contacts // required
+//     { // ContactSearchSummary
+//       Arn: "STRING_VALUE",
+//       Id: "STRING_VALUE",
+//       InitialContactId: "STRING_VALUE",
+//       PreviousContactId: "STRING_VALUE",
+//       InitiationMethod: "INBOUND" || "OUTBOUND" || "TRANSFER" || "QUEUE_TRANSFER" || "CALLBACK" || "API" || "DISCONNECT" || "MONITOR" || "EXTERNAL_OUTBOUND" || "WEBRTC_API" || "AGENT_REPLY" || "FLOW",
+//       Channel: "VOICE" || "CHAT" || "TASK" || "EMAIL",
+//       QueueInfo: { // ContactSearchSummaryQueueInfo
+//         Id: "STRING_VALUE",
+//         EnqueueTimestamp: new Date("TIMESTAMP"),
+//       },
+//       AgentInfo: { // ContactSearchSummaryAgentInfo
+//         Id: "STRING_VALUE",
+//         ConnectedToAgentTimestamp: new Date("TIMESTAMP"),
+//       },
+//       InitiationTimestamp: new Date("TIMESTAMP"),
+//       DisconnectTimestamp: new Date("TIMESTAMP"),
+//       ScheduledTimestamp: new Date("TIMESTAMP"),
+//       SegmentAttributes: { // ContactSearchSummarySegmentAttributes
+//         "<keys>": { // ContactSearchSummarySegmentAttributeValue
+//           ValueString: "STRING_VALUE",
+//         },
+//       },
+//     },
+//   ],
+//   NextToken: "STRING_VALUE",
+//   TotalCount: Number("long"),
+// };
 
-Request ID
