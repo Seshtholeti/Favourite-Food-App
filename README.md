@@ -1,117 +1,61 @@
 import { ConnectClient, SearchContactsCommand } from "@aws-sdk/client-connect"; // ES Modules import
 // const { ConnectClient, SearchContactsCommand } = require("@aws-sdk/client-connect"); // CommonJS import
+
+// Configure AWS SDK Client (No explicit credentials needed)
+const config = {
+  region: 'us-east-1', // Replace with your region
+};
+
 const client = new ConnectClient(config);
-const input = { // SearchContactsRequest
-  InstanceId: "STRING_VALUE", // required
-  TimeRange: { // SearchContactsTimeRange
-    Type: "INITIATION_TIMESTAMP" || "SCHEDULED_TIMESTAMP" || "CONNECTED_TO_AGENT_TIMESTAMP" || "DISCONNECT_TIMESTAMP", // required
-    StartTime: new Date("TIMESTAMP"), // required
-    EndTime: new Date("TIMESTAMP"), // required
+
+// Define input parameters for SearchContactsRequest
+const input = {
+  InstanceId: "your-instance-id", // Replace with your Amazon Connect instance ID
+  TimeRange: {
+    Type: "INITIATION_TIMESTAMP", // Change this based on your requirement
+    StartTime: new Date("2024-01-01T00:00:00Z"), // Example Start Time
+    EndTime: new Date("2024-01-31T23:59:59Z"), // Example End Time
   },
-  SearchCriteria: { // SearchCriteria
-    AgentIds: [ // AgentResourceIdList
-      "STRING_VALUE",
-    ],
-    AgentHierarchyGroups: { // AgentHierarchyGroups
-      L1Ids: [ // HierarchyGroupIdList
-        "STRING_VALUE",
-      ],
-      L2Ids: [
-        "STRING_VALUE",
-      ],
-      L3Ids: [
-        "STRING_VALUE",
-      ],
-      L4Ids: [
-        "STRING_VALUE",
-      ],
-      L5Ids: [
-        "STRING_VALUE",
-      ],
-    },
-    Channels: [ // ChannelList
-      "VOICE" || "CHAT" || "TASK" || "EMAIL",
-    ],
-    ContactAnalysis: { // ContactAnalysis
-      Transcript: { // Transcript
-        Criteria: [ // TranscriptCriteriaList // required
-          { // TranscriptCriteria
-            ParticipantRole: "AGENT" || "CUSTOMER" || "SYSTEM" || "CUSTOM_BOT" || "SUPERVISOR", // required
-            SearchText: [ // SearchTextList // required
-              "STRING_VALUE",
-            ],
-            MatchType: "MATCH_ALL" || "MATCH_ANY", // required
-          },
-        ],
-        MatchType: "MATCH_ALL" || "MATCH_ANY",
-      },
-    },
-    InitiationMethods: [ // InitiationMethodList
-      "INBOUND" || "OUTBOUND" || "TRANSFER" || "QUEUE_TRANSFER" || "CALLBACK" || "API" || "DISCONNECT" || "MONITOR" || "EXTERNAL_OUTBOUND" || "WEBRTC_API" || "AGENT_REPLY" || "FLOW",
-    ],
-    QueueIds: [ // QueueIdList
-      "STRING_VALUE",
-    ],
-    SearchableContactAttributes: { // SearchableContactAttributes
-      Criteria: [ // SearchableContactAttributesCriteriaList // required
-        { // SearchableContactAttributesCriteria
-          Key: "STRING_VALUE", // required
-          Values: [ // SearchableContactAttributeValueList // required
-            "STRING_VALUE",
-          ],
-        },
-      ],
-      MatchType: "MATCH_ALL" || "MATCH_ANY",
-    },
-    SearchableSegmentAttributes: { // SearchableSegmentAttributes
-      Criteria: [ // SearchableSegmentAttributesCriteriaList // required
-        { // SearchableSegmentAttributesCriteria
-          Key: "STRING_VALUE", // required
-          Values: [ // SearchableSegmentAttributeValueList // required
-            "STRING_VALUE",
-          ],
-        },
-      ],
-      MatchType: "MATCH_ALL" || "MATCH_ANY",
-    },
+  SearchCriteria: {
+    AgentIds: ["your-agent-id"], // Replace with agent ID(s) you're interested in
+    Channels: ["VOICE"], // Change channel type if needed (e.g., "CHAT", "EMAIL")
+    InitiationMethods: ["INBOUND"], // Modify initiation method as needed (e.g., "OUTBOUND", "TRANSFER")
+    QueueIds: ["your-queue-id"], // Replace with the queue ID if needed
   },
-  MaxResults: Number("int"),
-  NextToken: "STRING_VALUE",
-  Sort: { // Sort
-    FieldName: "INITIATION_TIMESTAMP" || "SCHEDULED_TIMESTAMP" || "CONNECTED_TO_AGENT_TIMESTAMP" || "DISCONNECT_TIMESTAMP" || "INITIATION_METHOD" || "CHANNEL", // required
-    Order: "ASCENDING" || "DESCENDING", // required
+  MaxResults: 10, // Set the maximum number of results you want to fetch
+  Sort: {
+    FieldName: "INITIATION_TIMESTAMP", // Field to sort by
+    Order: "ASCENDING", // Sorting order
   },
 };
-const command = new SearchContactsCommand(input);
-const response = await client.send(command);
-// { // SearchContactsResponse
-//   Contacts: [ // Contacts // required
-//     { // ContactSearchSummary
-//       Arn: "STRING_VALUE",
-//       Id: "STRING_VALUE",
-//       InitialContactId: "STRING_VALUE",
-//       PreviousContactId: "STRING_VALUE",
-//       InitiationMethod: "INBOUND" || "OUTBOUND" || "TRANSFER" || "QUEUE_TRANSFER" || "CALLBACK" || "API" || "DISCONNECT" || "MONITOR" || "EXTERNAL_OUTBOUND" || "WEBRTC_API" || "AGENT_REPLY" || "FLOW",
-//       Channel: "VOICE" || "CHAT" || "TASK" || "EMAIL",
-//       QueueInfo: { // ContactSearchSummaryQueueInfo
-//         Id: "STRING_VALUE",
-//         EnqueueTimestamp: new Date("TIMESTAMP"),
-//       },
-//       AgentInfo: { // ContactSearchSummaryAgentInfo
-//         Id: "STRING_VALUE",
-//         ConnectedToAgentTimestamp: new Date("TIMESTAMP"),
-//       },
-//       InitiationTimestamp: new Date("TIMESTAMP"),
-//       DisconnectTimestamp: new Date("TIMESTAMP"),
-//       ScheduledTimestamp: new Date("TIMESTAMP"),
-//       SegmentAttributes: { // ContactSearchSummarySegmentAttributes
-//         "<keys>": { // ContactSearchSummarySegmentAttributeValue
-//           ValueString: "STRING_VALUE",
-//         },
-//       },
-//     },
-//   ],
-//   NextToken: "STRING_VALUE",
-//   TotalCount: Number("long"),
-// };
 
+// Create and send the SearchContactsCommand
+const command = new SearchContactsCommand(input);
+
+async function searchContacts() {
+  try {
+    const response = await client.send(command);
+    console.log("Search Results:", response.Contacts);
+
+    // Example of processing the response
+    if (response.Contacts && response.Contacts.length > 0) {
+      response.Contacts.forEach(contact => {
+        console.log(`Contact ID: ${contact.Id}`);
+        console.log(`Channel: ${contact.Channel}`);
+        console.log(`Initiation Method: ${contact.InitiationMethod}`);
+        console.log(`Queue ID: ${contact.QueueInfo ? contact.QueueInfo.Id : 'N/A'}`);
+        console.log(`Agent ID: ${contact.AgentInfo ? contact.AgentInfo.Id : 'N/A'}`);
+        console.log(`Initiation Timestamp: ${contact.InitiationTimestamp}`);
+        console.log(`Disconnect Timestamp: ${contact.DisconnectTimestamp}`);
+        console.log("----------------------------");
+      });
+    } else {
+      console.log("No contacts found for the given search criteria.");
+    }
+  } catch (error) {
+    console.error("Error searching contacts:", error);
+  }
+}
+
+// Run the search function
+searchContacts();
