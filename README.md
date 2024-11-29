@@ -1,200 +1,129 @@
-import { ConnectClient, GetContactAttributesCommand } from "@aws-sdk/client-connect"; // ES Modules import
-// const { ConnectClient, GetContactAttributesCommand } = require("@aws-sdk/client-connect"); // CommonJS import
-const client = new ConnectClient(config);
-const input = { // GetContactAttributesRequest
-  InstanceId: "STRING_VALUE", // required
-  InitialContactId: "STRING_VALUE", // required
-};
-const command = new GetContactAttributesCommand(input);
-const response = await client.send(command);
-// { // GetContactAttributesResponse
-//   Attributes: { // Attributes
-//     "<keys>": "STRING_VALUE",
-//   },
-// };
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import csvParser from 'csv-parser';
+import { ConnectClient, SearchContactsCommand, GetContactAttributesCommand } from '@aws-sdk/client-connect';
 
-api syntax for GetCOntact.
+const s3 = new S3Client();
+const connect = new ConnectClient();
 
-below is the syntax code for Searchcontact command
-import { ConnectClient, SearchContactsCommand } from "@aws-sdk/client-connect"; // ES Modules import
-// const { ConnectClient, SearchContactsCommand } = require("@aws-sdk/client-connect"); // CommonJS import
-const client = new ConnectClient(config);
-const input = { // SearchContactsRequest
-  InstanceId: "STRING_VALUE", // required
-  TimeRange: { // SearchContactsTimeRange
-    Type: "INITIATION_TIMESTAMP" || "SCHEDULED_TIMESTAMP" || "CONNECTED_TO_AGENT_TIMESTAMP" || "DISCONNECT_TIMESTAMP", // required
-    StartTime: new Date("TIMESTAMP"), // required
-    EndTime: new Date("TIMESTAMP"), // required
-  },
-  SearchCriteria: { // SearchCriteria
-    AgentIds: [ // AgentResourceIdList
-      "STRING_VALUE",
-    ],
-    AgentHierarchyGroups: { // AgentHierarchyGroups
-      L1Ids: [ // HierarchyGroupIdList
-        "STRING_VALUE",
-      ],
-      L2Ids: [
-        "STRING_VALUE",
-      ],
-      L3Ids: [
-        "STRING_VALUE",
-      ],
-      L4Ids: [
-        "STRING_VALUE",
-      ],
-      L5Ids: [
-        "STRING_VALUE",
-      ],
-    },
-    Channels: [ // ChannelList
-      "VOICE" || "CHAT" || "TASK" || "EMAIL",
-    ],
-    ContactAnalysis: { // ContactAnalysis
-      Transcript: { // Transcript
-        Criteria: [ // TranscriptCriteriaList // required
-          { // TranscriptCriteria
-            ParticipantRole: "AGENT" || "CUSTOMER" || "SYSTEM" || "CUSTOM_BOT" || "SUPERVISOR", // required
-            SearchText: [ // SearchTextList // required
-              "STRING_VALUE",
-            ],
-            MatchType: "MATCH_ALL" || "MATCH_ANY", // required
+export const handler = async (event) => {
+  const bucketName = 'customeroutbound-data';
+  const fileName = 'CustomerOutboundNumber.csv';
+  const instanceId = 'bd16d991-11c8-4d1e-9900-edd5ed4a9b21';
+
+  try {
+    // Fetch the CSV file from S3
+    const params = { Bucket: bucketName, Key: fileName };
+    const command = new GetObjectCommand(params);
+    const response = await s3.send(command);
+    const stream = response.Body;
+    if (!stream) {
+      throw new Error("No stream data found in the S3 object.");
+    }
+
+    // Parse phone numbers from the CSV
+    const phoneNumbers = [];
+    await new Promise((resolve, reject) => {
+      stream
+        .pipe(csvParser({ separator: ';' }))
+        .on('data', (row) => {
+          const phoneNumber = row.PhoneNumber || row['Name;PhoneNumber']?.split(';')[1]?.trim();
+          if (phoneNumber) {
+            // Format phone number to E.164 format
+            let formattedNumber = phoneNumber.replace(/\D/g, ''); 
+            if (formattedNumber.length === 10) {
+              formattedNumber = `+91${formattedNumber}`; 
+            } else if (formattedNumber.length === 11) {
+              formattedNumber = `+1${formattedNumber}`; 
+            }
+            phoneNumbers.push(formattedNumber);
+          }
+        })
+        .on('end', resolve)
+        .on('error', reject);
+    });
+
+    if (phoneNumbers.length === 0) {
+      throw new Error('No phone numbers found in the CSV file.');
+    }
+
+    // Get yesterday's date to filter records from Amazon Connect
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1); // Subtract one day to get yesterday's date
+    const startDate = new Date(yesterday.setHours(0, 0, 0, 0)).toISOString(); // Start of yesterday
+    const endDate = new Date(yesterday.setHours(23, 59, 59, 999)).toISOString(); // End of yesterday
+
+    // Log the details for each phone number
+    const callDetails = [];
+
+    // Loop through the phone numbers and check Amazon Connect records
+    for (const phoneNumber of phoneNumbers) {
+      try {
+        // Search contacts from Amazon Connect for yesterday's date
+        const searchContactsParams = {
+          InstanceId: instanceId,
+          TimeRange: {
+            Type: "INITIATION_TIMESTAMP",  // Searching based on the initiation timestamp
+            StartTime: startDate,
+            EndTime: endDate,
           },
-        ],
-        MatchType: "MATCH_ALL" || "MATCH_ANY",
-      },
-    },
-    InitiationMethods: [ // InitiationMethodList
-      "INBOUND" || "OUTBOUND" || "TRANSFER" || "QUEUE_TRANSFER" || "CALLBACK" || "API" || "DISCONNECT" || "MONITOR" || "EXTERNAL_OUTBOUND" || "WEBRTC_API" || "AGENT_REPLY" || "FLOW",
-    ],
-    QueueIds: [ // QueueIdList
-      "STRING_VALUE",
-    ],
-    SearchableContactAttributes: { // SearchableContactAttributes
-      Criteria: [ // SearchableContactAttributesCriteriaList // required
-        { // SearchableContactAttributesCriteria
-          Key: "STRING_VALUE", // required
-          Values: [ // SearchableContactAttributeValueList // required
-            "STRING_VALUE",
-          ],
-        },
-      ],
-      MatchType: "MATCH_ALL" || "MATCH_ANY",
-    },
-    SearchableSegmentAttributes: { // SearchableSegmentAttributes
-      Criteria: [ // SearchableSegmentAttributesCriteriaList // required
-        { // SearchableSegmentAttributesCriteria
-          Key: "STRING_VALUE", // required
-          Values: [ // SearchableSegmentAttributeValueList // required
-            "STRING_VALUE",
-          ],
-        },
-      ],
-      MatchType: "MATCH_ALL" || "MATCH_ANY",
-    },
-  },
-  MaxResults: Number("int"),
-  NextToken: "STRING_VALUE",
-  Sort: { // Sort
-    FieldName: "INITIATION_TIMESTAMP" || "SCHEDULED_TIMESTAMP" || "CONNECTED_TO_AGENT_TIMESTAMP" || "DISCONNECT_TIMESTAMP" || "INITIATION_METHOD" || "CHANNEL", // required
-    Order: "ASCENDING" || "DESCENDING", // required
-  },
+          SearchCriteria: {
+            Channels: ["VOICE"],  // Adjust the channel if needed
+          },
+          MaxResults: 100, // Adjust as necessary
+        };
+        const contactResponse = await connect.send(new SearchContactsCommand(searchContactsParams));
+
+        // Filter to find the specific record that matches the phone number
+        const contactRecord = contactResponse.Contacts.find(contact => contact.CustomerEndpoint.Address === phoneNumber);
+
+        if (contactRecord) {
+          // Get additional attributes like agent ID, disposition
+          const contactAttributesParams = {
+            InstanceId: instanceId,
+            ContactId: contactRecord.ContactId,
+          };
+          const attributesResponse = await connect.send(new GetContactAttributesCommand(contactAttributesParams));
+          
+          // Extract agent ID and disposition
+          const agentId = attributesResponse.Attributes['AgentId'];
+          const disposition = attributesResponse.Attributes['Disposition'] || 'Not Answered';
+
+          // Log the result
+          callDetails.push({
+            phoneNumber,
+            agentId,
+            disposition,
+          });
+
+        } else {
+          callDetails.push({
+            phoneNumber,
+            agentId: 'N/A',
+            disposition: 'No Call Record Found',
+          });
+        }
+      } catch (error) {
+        console.error(`Error processing phone number ${phoneNumber}:`, error);
+        callDetails.push({
+          phoneNumber,
+          agentId: 'Error',
+          disposition: 'Error Fetching Record',
+        });
+      }
+    }
+
+    console.log('Call Details:', callDetails);
+
+    // Return a success response
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Process completed successfully', details: callDetails }),
+    };
+  } catch (error) {
+    console.error('Error processing the Lambda function:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message, details: error.stack }),
+    };
+  }
 };
-const command = new SearchContactsCommand(input);
-const response = await client.send(command);
-// { // SearchContactsResponse
-//   Contacts: [ // Contacts // required
-//     { // ContactSearchSummary
-//       Arn: "STRING_VALUE",
-//       Id: "STRING_VALUE",
-//       InitialContactId: "STRING_VALUE",
-//       PreviousContactId: "STRING_VALUE",
-//       InitiationMethod: "INBOUND" || "OUTBOUND" || "TRANSFER" || "QUEUE_TRANSFER" || "CALLBACK" || "API" || "DISCONNECT" || "MONITOR" || "EXTERNAL_OUTBOUND" || "WEBRTC_API" || "AGENT_REPLY" || "FLOW",
-//       Channel: "VOICE" || "CHAT" || "TASK" || "EMAIL",
-//       QueueInfo: { // ContactSearchSummaryQueueInfo
-//         Id: "STRING_VALUE",
-//         EnqueueTimestamp: new Date("TIMESTAMP"),
-//       },
-//       AgentInfo: { // ContactSearchSummaryAgentInfo
-//         Id: "STRING_VALUE",
-//         ConnectedToAgentTimestamp: new Date("TIMESTAMP"),
-//       },
-//       InitiationTimestamp: new Date("TIMESTAMP"),
-//       DisconnectTimestamp: new Date("TIMESTAMP"),
-//       ScheduledTimestamp: new Date("TIMESTAMP"),
-//       SegmentAttributes: { // ContactSearchSummarySegmentAttributes
-//         "<keys>": { // ContactSearchSummarySegmentAttributeValue
-//           ValueString: "STRING_VALUE",
-//         },
-//       },
-//     },
-//   ],
-//   NextToken: "STRING_VALUE",
-//   TotalCount: Number("long"),
-// };
-
-below is the error I am getting
-MyEventName
-
-Response
-{
-  "statusCode": 200,
-  "body": "{\"message\":\"Process completed successfully\",\"details\":[{\"phoneNumber\":\"+919949921498\",\"agentId\":\"Error\",\"disposition\":\"Error Fetching Record\"},{\"phoneNumber\":\"+918639694701\",\"agentId\":\"Error\",\"disposition\":\"Error Fetching Record\"}]}"
-}
-
-Function Logs
-START RequestId: fd83af81-9023-47ba-850d-e914361eb0db Version: $LATEST
-2024-11-29T02:10:03.100Z	fd83af81-9023-47ba-850d-e914361eb0db	ERROR	Error processing phone number +919949921498: BadRequestException: Invalid request body
-    at throwDefaultError (/var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:840:20)
-    at /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:849:5
-    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9806:14)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
-    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
-    at async Runtime.handler (file:///var/task/index.mjs:250:33) {
-  '$fault': 'client',
-  '$metadata': {
-    httpStatusCode: 400,
-    requestId: '004b87f4-bb84-4892-91e4-1c76cd08df7b',
-    extendedRequestId: undefined,
-    cfId: undefined,
-    attempts: 1,
-    totalRetryDelay: 0
-  }
-}
-2024-11-29T02:10:03.160Z	fd83af81-9023-47ba-850d-e914361eb0db	ERROR	Error processing phone number +918639694701: BadRequestException: Invalid request body
-    at throwDefaultError (/var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:840:20)
-    at /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:849:5
-    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9806:14)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
-    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
-    at async Runtime.handler (file:///var/task/index.mjs:250:33) {
-  '$fault': 'client',
-  '$metadata': {
-    httpStatusCode: 400,
-    requestId: 'f4b8078f-a5ed-4d5c-b64b-9c18db286492',
-    extendedRequestId: undefined,
-    cfId: undefined,
-    attempts: 1,
-    totalRetryDelay: 0
-  }
-}
-2024-11-29T02:10:03.161Z	fd83af81-9023-47ba-850d-e914361eb0db	INFO	Call Details: [
-  {
-    phoneNumber: '+919949921498',
-    agentId: 'Error',
-    disposition: 'Error Fetching Record'
-  },
-  {
-    phoneNumber: '+918639694701',
-    agentId: 'Error',
-    disposition: 'Error Fetching Record'
-  }
-]
-END RequestId: fd83af81-9023-47ba-850d-e914361eb0db
-REPORT RequestId: fd83af81-9023-47ba-850d-e914361eb0db	Duration: 732.77 ms	Billed Duration: 733 ms	Memory Size: 128 MB	Max Memory Used: 99 MB
