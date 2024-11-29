@@ -1,7 +1,6 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import csvParser from 'csv-parser';
 import { ConnectClient, ListContactsCommand, GetContactAttributesCommand } from '@aws-sdk/client-connect';
-import moment from 'moment';
 
 const s3 = new S3Client();
 const connect = new ConnectClient();
@@ -10,7 +9,7 @@ export const handler = async (event) => {
   const bucketName = 'customeroutbound-data';
   const fileName = 'CustomerOutboundNumber.csv';
   const instanceId = 'bd16d991-11c8-4d1e-9900-edd5ed4a9b21';
-  
+
   try {
     // Fetch the CSV file from S3
     const params = { Bucket: bucketName, Key: fileName };
@@ -48,7 +47,10 @@ export const handler = async (event) => {
     }
 
     // Get yesterday's date to filter records from Amazon Connect
-    const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1); // Subtract one day to get yesterday's date
+    const startDate = new Date(yesterday.setHours(0, 0, 0, 0)).toISOString(); // Start of yesterday
+    const endDate = new Date(yesterday.setHours(23, 59, 59, 999)).toISOString(); // End of yesterday
 
     // Log the details for each phone number
     const callDetails = [];
@@ -59,9 +61,8 @@ export const handler = async (event) => {
         // Get contact records from Amazon Connect for yesterday's date
         const listContactsParams = {
           InstanceId: instanceId,
-          ContactFlowId: '', // You can specify if needed
-          StartTime: yesterday,
-          EndTime: yesterday,
+          StartTime: startDate,
+          EndTime: endDate,
           MaxResults: 100, // Adjust as necessary
         };
         const contactResponse = await connect.send(new ListContactsCommand(listContactsParams));
