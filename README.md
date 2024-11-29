@@ -1,22 +1,42 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import csvParser from "csv-parser";
-import { ConnectClient, GetMetricDataV2Command, GetContactAttributesCommand } from "@aws-sdk/client-connect";
-import { subDays, format } from "date-fns";
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import csvParser from 'csv-parser';
+import { ConnectClient, GetMetricDataV2Command, GetContactAttributesCommand, ListQueuesCommand } from '@aws-sdk/client-connect';
+import { subDays, format } from 'date-fns';
 
 const s3 = new S3Client();
-const client = new ConnectClient({ region: "us-east-1" });
+const client = new ConnectClient({ region: 'us-east-1' });
+
+// // Function to fetch all queue IDs
+// const fetchAllQueueIds = async () => {
+//   const queueIds = [];
+//   try {
+//     const listQueuesCommand = new ListQueuesCommand({
+//       InstanceId: process.env.InstanceId,
+//     });
+//     const data = await client.send(listQueuesCommand);
+//     console.log('Fetched Queues:', data.QueueSummaryList);  // Log queue details for debugging
+//     if (data.QueueSummaryList && data.QueueSummaryList.length > 0) {
+//       data.QueueSummaryList.forEach(queue => {
+//         queueIds.push(queue.Id);
+//       });
+//     }
+//   } catch (err) {
+//     console.error('Error fetching queue IDs:', err);
+//   }
+//   console.log('Queue IDs:', queueIds);  // Log the final array of queue IDs
+//   return queueIds;
+// };
 
 export const handler = async () => {
-  const bucketName = "customeroutbound-data"; // Your S3 bucket name
-  const fileName = "CustomerOutboundNumber.csv"; // CSV file name
-  const instanceId = "bd16d991-11c8-4d1e-9900-edd5ed4a9b21"; // Amazon Connect instance ID
+  const bucketName = 'customeroutbound-data';
+  const fileName = 'CustomerOutboundNumber.csv';
+  const instanceId = 'bd16d991-11c8-4d1e-9900-edd5ed4a9b21';
   
-  // Date range for the last day
   const yesterdayStart = `${format(subDays(new Date(), 1), 'yyyy-MM-dd')}T00:00:00Z`;
   const yesterdayEnd = `${format(subDays(new Date(), 1), 'yyyy-MM-dd')}T23:59:59Z`;
 
   try {
-    // Fetch phone numbers from S3 CSV file
+    // Fetch CSV from S3
     const params = { Bucket: bucketName, Key: fileName };
     const command = new GetObjectCommand(params);
     const response = await s3.send(command);
@@ -33,11 +53,11 @@ export const handler = async () => {
         .on('data', (row) => {
           const phoneNumber = row.PhoneNumber || row['Name;PhoneNumber']?.split(';')[1]?.trim();
           if (phoneNumber) {
-            let formattedNumber = phoneNumber.replace(/\D/g, ''); // Remove non-digit characters
+            let formattedNumber = phoneNumber.replace(/\D/g, '');
             if (formattedNumber.length === 10) {
-              formattedNumber = `+91${formattedNumber}`; // Add country code for India
+              formattedNumber = `+91${formattedNumber}`;
             } else if (formattedNumber.length === 11) {
-              formattedNumber = `+1${formattedNumber}`; // Add country code for USA
+              formattedNumber = `+1${formattedNumber}`;
             }
             phoneNumbers.push(formattedNumber);
           }
@@ -50,11 +70,24 @@ export const handler = async () => {
       throw new Error('No phone numbers found in the CSV file.');
     }
 
-    // Define the Amazon Connect instance ARN and queue ID
-    const RArn = "arn:aws:connect:us-east-1:768637739934:instance/bd16d991-11c8-4d1e-9900-edd5ed4a9b21";
-    const queueId = "f8c742b9-b5ef-4948-8bbf-9a33c892023f"; // Replace with actual queue ID
+    // // Fetch metrics from Amazon Connect
+    // const queueIds = await fetchAllQueueIds();
+    // if (queueIds.length === 0) {
+    //   throw new Error('No queues found');
+    // }
 
-    // Prepare metric data request
+    
+    // // console.log('Queue IDs for Metric Command:',JSON.stringify(queueIds));
+
+    // // Verify that queueIds is a valid array
+    // if (!Array.isArray(queueIds) || queueIds.length === 0) {
+    //   throw new Error('Invalid or empty Queue IDs');
+    // }
+    
+    const queueId = "f8c742b9-b5ef-4948-8bbf-9a33c892023f";
+    
+    const RArn = "arn:aws:connect:us-east-1:768637739934:instance/bd16d991-11c8-4d1e-9900-edd5ed4a9b21"
+
     const metricDataInput = {
       ResourceArn: RArn,
       StartTime: new Date(yesterdayStart),
@@ -62,7 +95,7 @@ export const handler = async () => {
       Interval: { IntervalPeriod: 'DAY' },
       Filters: [{
         FilterKey: "QUEUE",
-        FilterValues: [queueId],
+        FilterValues: [queueId]
       }],
       Groupings: ['QUEUE'],
       Metrics: [
@@ -71,26 +104,39 @@ export const handler = async () => {
       ],
     };
 
-    // Fetch metric data from Amazon Connect
+    // Log metric data input for debugging
+    console.log('**** Metric Command ******', JSON.stringify(metricDataInput,null,));
+
     const metricCommand = new GetMetricDataV2Command(metricDataInput);
     const metricResponse = await client.send(metricCommand);
 
     const contactDetails = [];
 
-    // Extract and format contact details from metric results
+    // Extract and format contact details
     for (const result of metricResponse.MetricResults) {
+      console.log("res",metricResponse.MetricResults )
       const agentId = result.Dimensions?.AGENT || 'N/A';
+      console.log("agent",agentId)
       const phoneNumber = result.Dimensions?.PhoneNumber || 'N/A';
       const disposition = result.Dimensions?.Disposition || 'Unknown';
-      const contactId = "09f2c3c7-c424-4ad2-be1f-246be15b51a4"; // Replace with actual contact ID if available
+      const contactId = "09f2c3c7-c424-4ad2-be1f-246be15b51a4";
+      
+      console.log('**cID:', contactId)
 
       for (const collection of result.Collections) {
         if (collection.Metric.Name === 'CONTACTS_HANDLED' && collection.Value > 0) {
-          // Fetch contact attributes for handled contacts
+          // Fetch contact attributes from Amazon Connect
           const attributesCommand = new GetContactAttributesCommand({
             InstanceId: instanceId,
             InitialContactId: contactId,
+            
+            
+            
           });
+          
+          console.log('sending GetContactAttributesCommand with contact id', contactId)
+          
+          
 
           const attributesResponse = await client.send(attributesCommand);
 
@@ -103,7 +149,6 @@ export const handler = async () => {
             attributes: attributesResponse.Attributes || {},
           });
         } else if (collection.Metric.Name === 'CONTACTS_ABANDONED' && collection.Value > 0) {
-          // Handle abandoned contacts
           contactDetails.push({
             contactId,
             agentId,
@@ -132,32 +177,7 @@ export const handler = async () => {
   }
 };
 
-this is the error.
 
-Response
-{
-  "statusCode": 500,
-  "body": "{\"error\":\"Resource not found\",\"details\":\"ResourceNotFoundException: Resource not found\\n    at de_ResourceNotFoundExceptionRes (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:10072:21)\\n    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9740:19)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20\\n    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18\\n    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38\\n    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22\\n    at async Runtime.handler (file:///var/task/index.mjs:278:38)\"}"
-}
 
-Function Logs
-START RequestId: a8b41ef8-6d7f-427f-be82-32c23ccc7bce Version: $LATEST
-2024-11-29T01:09:20.645Z	a8b41ef8-6d7f-427f-be82-32c23ccc7bce	ERROR	Error processing the Lambda function: ResourceNotFoundException: Resource not found
-    at de_ResourceNotFoundExceptionRes (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:10072:21)
-    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9740:19)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
-    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
-    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
-    at async Runtime.handler (file:///var/task/index.mjs:278:38) {
-  '$fault': 'client',
-  '$metadata': {
-    httpStatusCode: 404,
-    requestId: '1c4dc4c8-df27-4759-9ecd-4fb1cf038205',
-    extendedRequestId: undefined,
-    cfId: undefined,
-    attempts: 1,
-    totalRetryDelay: 0
-  }
-}
+
+
