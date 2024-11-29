@@ -133,3 +133,68 @@ const response = await client.send(command);
 //   TotalCount: Number("long"),
 // };
 
+below is the error I am getting
+MyEventName
+
+Response
+{
+  "statusCode": 200,
+  "body": "{\"message\":\"Process completed successfully\",\"details\":[{\"phoneNumber\":\"+919949921498\",\"agentId\":\"Error\",\"disposition\":\"Error Fetching Record\"},{\"phoneNumber\":\"+918639694701\",\"agentId\":\"Error\",\"disposition\":\"Error Fetching Record\"}]}"
+}
+
+Function Logs
+START RequestId: fd83af81-9023-47ba-850d-e914361eb0db Version: $LATEST
+2024-11-29T02:10:03.100Z	fd83af81-9023-47ba-850d-e914361eb0db	ERROR	Error processing phone number +919949921498: BadRequestException: Invalid request body
+    at throwDefaultError (/var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:840:20)
+    at /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:849:5
+    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9806:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
+    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
+    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
+    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
+    at async Runtime.handler (file:///var/task/index.mjs:250:33) {
+  '$fault': 'client',
+  '$metadata': {
+    httpStatusCode: 400,
+    requestId: '004b87f4-bb84-4892-91e4-1c76cd08df7b',
+    extendedRequestId: undefined,
+    cfId: undefined,
+    attempts: 1,
+    totalRetryDelay: 0
+  }
+}
+2024-11-29T02:10:03.160Z	fd83af81-9023-47ba-850d-e914361eb0db	ERROR	Error processing phone number +918639694701: BadRequestException: Invalid request body
+    at throwDefaultError (/var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:840:20)
+    at /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/smithy-client/dist-cjs/index.js:849:5
+    at de_CommandError (/var/runtime/node_modules/@aws-sdk/client-connect/dist-cjs/index.js:9806:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-serde/dist-cjs/index.js:35:20
+    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/core/dist-cjs/index.js:165:18
+    at async /var/runtime/node_modules/@aws-sdk/node_modules/@smithy/middleware-retry/dist-cjs/index.js:320:38
+    at async /var/runtime/node_modules/@aws-sdk/middleware-logger/dist-cjs/index.js:34:22
+    at async Runtime.handler (file:///var/task/index.mjs:250:33) {
+  '$fault': 'client',
+  '$metadata': {
+    httpStatusCode: 400,
+    requestId: 'f4b8078f-a5ed-4d5c-b64b-9c18db286492',
+    extendedRequestId: undefined,
+    cfId: undefined,
+    attempts: 1,
+    totalRetryDelay: 0
+  }
+}
+2024-11-29T02:10:03.161Z	fd83af81-9023-47ba-850d-e914361eb0db	INFO	Call Details: [
+  {
+    phoneNumber: '+919949921498',
+    agentId: 'Error',
+    disposition: 'Error Fetching Record'
+  },
+  {
+    phoneNumber: '+918639694701',
+    agentId: 'Error',
+    disposition: 'Error Fetching Record'
+  }
+]
+END RequestId: fd83af81-9023-47ba-850d-e914361eb0db
+REPORT RequestId: fd83af81-9023-47ba-850d-e914361eb0db	Duration: 732.77 ms	Billed Duration: 733 ms	Memory Size: 128 MB	Max Memory Used: 99 MB
