@@ -1,35 +1,37 @@
-import { ConnectClient, SearchContactsCommand, DescribeUsersCommand } from "@aws-sdk/client-connect"; // ES Modules import
+import { ConnectClient, SearchContactsCommand, ListUsersCommand, DescribeQueueCommand } from "@aws-sdk/client-connect"; 
 
 // Configure AWS SDK Client
-const config = {
-  region: 'us-east-1', // Replace with your region
-};
+const client = new ConnectClient({
+  region: 'us-east-1', // Adjust the region
+});
 
-const client = new ConnectClient(config);
+// Define your Amazon Connect instance ID and Queue ID
+const instanceId = 'your-instance-id'; // Replace with your Connect Instance ID
+const queueId = 'your-queue-id'; // Replace with your Queue ID
 
-// Define your Amazon Connect instance ID
-const instanceId = 'your-instance-id'; // Replace with your Amazon Connect instance ID
-
-// Function to fetch agent IDs dynamically
+// Function to fetch agent IDs dynamically using ListUsersCommand
 async function fetchAgentIds() {
   const agentIds = [];
-  
+  let nextToken = null;
+
   try {
-    const describeUsersCommand = new DescribeUsersCommand({
-      InstanceId: instanceId,
-      UserStatus: "Active", // Optionally, filter by active users
-    });
-
-    const response = await client.send(describeUsersCommand);
-
-    if (response.Users && response.Users.length > 0) {
-      response.Users.forEach(user => {
-        agentIds.push(user.Id);
+    do {
+      const listUsersCommand = new ListUsersCommand({
+        InstanceId: instanceId,
+        NextToken: nextToken, // For pagination
       });
-      console.log("Fetched Agent IDs:", agentIds);
-    } else {
-      console.log("No active agents found.");
-    }
+
+      const response = await client.send(listUsersCommand);
+
+      if (response.Users && response.Users.length > 0) {
+        response.Users.forEach(user => {
+          agentIds.push(user.Id);
+        });
+      }
+
+      nextToken = response.NextToken; // Set NextToken for pagination if available
+    } while (nextToken);
+
   } catch (error) {
     console.error("Error fetching agent IDs:", error);
   }
@@ -37,18 +39,35 @@ async function fetchAgentIds() {
   return agentIds;
 }
 
-// Function to search contacts and check which agent is assigned
-async function searchContactsAndCheckAssignedAgents(agentIds) {
+// Function to describe queue to see queue settings (you can manually track agents per queue)
+async function describeQueue() {
+  try {
+    const describeQueueCommand = new DescribeQueueCommand({
+      InstanceId: instanceId,
+      QueueId: queueId,
+    });
+
+    const queueDetails = await client.send(describeQueueCommand);
+    console.log("Queue Details:", queueDetails);
+    return queueDetails;
+  } catch (error) {
+    console.error("Error describing queue:", error);
+  }
+}
+
+// Function to search contacts assigned to the given queue
+async function searchContactsByQueue(agentIds) {
   const input = {
     InstanceId: instanceId,
     TimeRange: {
-      Type: "INITIATION_TIMESTAMP", // Adjust this as needed
-      StartTime: new Date("2024-01-01T00:00:00Z"), // Example Start Time
-      EndTime: new Date("2024-01-31T23:59:59Z"), // Example End Time
+      Type: "INITIATION_TIMESTAMP",
+      StartTime: new Date("2024-01-01T00:00:00Z"),
+      EndTime: new Date("2024-01-31T23:59:59Z"),
     },
     SearchCriteria: {
-      AgentIds: agentIds, // Use the dynamic agent IDs
-      Channels: ["VOICE"], // Example Channel (you can change this as needed)
+      AgentIds: agentIds,
+      Channels: ["VOICE"],
+      QueueIds: [queueId], // Use the Queue ID to filter contacts
     },
     MaxResults: 10,
     Sort: {
@@ -66,11 +85,10 @@ async function searchContactsAndCheckAssignedAgents(agentIds) {
       console.log("Search Results:");
       response.Contacts.forEach(contact => {
         console.log(`Contact ID: ${contact.Id}`);
+        console.log(`Agent ID: ${contact.AgentInfo ? contact.AgentInfo.Id : 'N/A'}`);
+        console.log(`Queue ID: ${contact.QueueInfo ? contact.QueueInfo.Id : 'N/A'}`);
         console.log(`Channel: ${contact.Channel}`);
         console.log(`Initiation Method: ${contact.InitiationMethod}`);
-        console.log(`Agent ID: ${contact.AgentInfo ? contact.AgentInfo.Id : 'N/A'}`);
-        console.log(`Initiation Timestamp: ${contact.InitiationTimestamp}`);
-        console.log(`Disconnect Timestamp: ${contact.DisconnectTimestamp}`);
         console.log("----------------------------");
       });
     } else {
@@ -81,11 +99,12 @@ async function searchContactsAndCheckAssignedAgents(agentIds) {
   }
 }
 
-// Main function to fetch agents and then search contacts
+// Main function to describe queue, fetch agents, and search contacts
 async function main() {
+  const queueDetails = await describeQueue();
   const agentIds = await fetchAgentIds(); // Fetch agent IDs dynamically
   if (agentIds.length > 0) {
-    await searchContactsAndCheckAssignedAgents(agentIds); // Search contacts using the dynamic agent IDs
+    await searchContactsByQueue(agentIds); // Search contacts using the dynamic agent IDs
   } else {
     console.log("No agent IDs available to search contacts.");
   }
