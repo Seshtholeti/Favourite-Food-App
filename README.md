@@ -1,6 +1,6 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import csvParser from 'csv-parser';
-import { ConnectClient, GetMetricDataV2Command, GetContactAttributesCommand } from '@aws-sdk/client-connect';
+import { ConnectClient, GetMetricDataV2Command } from '@aws-sdk/client-connect';
 import { subDays, format } from 'date-fns';
 
 const s3 = new S3Client();
@@ -80,34 +80,22 @@ export const handler = async () => {
     for (const result of metricResponse.MetricResults) {
       console.log("res", metricResponse.MetricResults);
       const agentId = result.Dimensions?.AGENT || 'N/A';
+      console.log("agent", agentId);
       const phoneNumber = result.Dimensions?.PhoneNumber || 'N/A';
       const disposition = result.Dimensions?.Disposition || 'Unknown';
-      const contactId = result.Dimensions?.ContactId || 'N/A'; // Extract the contact ID from the metric results
+      const contactId = "09f2c3c7-c424-4ad2-be1f-246be15b51a4";
 
       console.log('**cID:', contactId);
 
       for (const collection of result.Collections) {
         if (collection.Metric.Name === 'CONTACTS_HANDLED' && collection.Value > 0) {
-          // Fetch contact attributes using GetContactAttributesCommand
-          const attributesCommand = new GetContactAttributesCommand({
-            InstanceId: instanceId,
-            InitialContactId: contactId,
-          });
-
-          const attributesResponse = await client.send(attributesCommand);
-
-          // Check if the call was answered, and extract the outbound phone number if available
-          const outboundPhoneNumber = attributesResponse.Attributes?.['OutboundPhoneNumber'] || 'N/A';
-          const callAnswered = attributesResponse.Attributes?.['CallAnswered'] === 'true' ? 'Answered' : 'Not Answered';
-
           contactDetails.push({
             contactId,
             agentId,
             timestamp: new Date().toISOString(),
-            outboundPhoneNumber,
+            outboundPhoneNumber: phoneNumber,
             disposition: disposition || 'Completed',
-            callStatus: callAnswered, // New field to indicate call status
-            attributes: attributesResponse.Attributes || {},
+            attributes: {},  // Removed contact attributes section
           });
         } else if (collection.Metric.Name === 'CONTACTS_ABANDONED' && collection.Value > 0) {
           contactDetails.push({
@@ -116,7 +104,6 @@ export const handler = async () => {
             timestamp: new Date().toISOString(),
             outboundPhoneNumber: phoneNumber,
             disposition: 'Abandoned',
-            callStatus: 'Not Answered', // Since it's abandoned, the call wasn't answered
             attributes: {},  // Removed contact attributes section
           });
         }
@@ -138,3 +125,66 @@ export const handler = async () => {
     };
   }
 };
+
+
+Test Event Name
+MyEventName
+
+Response
+{
+  "statusCode": 200,
+  "body": "{\"message\":\"Contact details fetched successfully.\",\"contactDetails\":[{\"contactId\":\"09f2c3c7-c424-4ad2-be1f-246be15b51a4\",\"agentId\":\"N/A\",\"timestamp\":\"2024-11-29T01:27:28.208Z\",\"outboundPhoneNumber\":\"N/A\",\"disposition\":\"Unknown\",\"attributes\":{}},{\"contactId\":\"09f2c3c7-c424-4ad2-be1f-246be15b51a4\",\"agentId\":\"N/A\",\"timestamp\":\"2024-11-29T01:27:28.208Z\",\"outboundPhoneNumber\":\"N/A\",\"disposition\":\"Abandoned\",\"attributes\":{}}]}"
+}
+
+Function Logs
+START RequestId: fa1e31e8-d8c8-4934-bebe-22b49c820410 Version: $LATEST
+2024-11-29T01:27:27.828Z	fa1e31e8-d8c8-4934-bebe-22b49c820410	INFO	**** Metric Command ****** {
+  "ResourceArn": "arn:aws:connect:us-east-1:768637739934:instance/bd16d991-11c8-4d1e-9900-edd5ed4a9b21",
+  "StartTime": "2024-11-28T00:00:00.000Z",
+  "EndTime": "2024-11-28T23:59:59.000Z",
+  "Interval": {
+    "IntervalPeriod": "DAY"
+  },
+  "Filters": [
+    {
+      "FilterKey": "QUEUE",
+      "FilterValues": [
+        "f8c742b9-b5ef-4948-8bbf-9a33c892023f"
+      ]
+    }
+  ],
+  "Groupings": [
+    "QUEUE"
+  ],
+  "Metrics": [
+    {
+      "Name": "CONTACTS_HANDLED",
+      "Unit": "COUNT"
+    },
+    {
+      "Name": "CONTACTS_ABANDONED",
+      "Unit": "COUNT"
+    }
+  ]
+}
+2024-11-29T01:27:28.170Z	fa1e31e8-d8c8-4934-bebe-22b49c820410	INFO	res [
+  {
+    Collections: [ [Object], [Object] ],
+    Dimensions: {
+      QUEUE: 'f8c742b9-b5ef-4948-8bbf-9a33c892023f',
+      QUEUE_ARN: 'arn:aws:connect:us-east-1:768637739934:instance/bd16d991-11c8-4d1e-9900-edd5ed4a9b21/queue/f8c742b9-b5ef-4948-8bbf-9a33c892023f'
+    },
+    MetricInterval: {
+      EndTime: 2024-11-28T23:59:59.000Z,
+      Interval: 'DAY',
+      StartTime: 2024-11-28T00:00:00.000Z
+    }
+  }
+]
+2024-11-29T01:27:28.208Z	fa1e31e8-d8c8-4934-bebe-22b49c820410	INFO	agent N/A
+2024-11-29T01:27:28.208Z	fa1e31e8-d8c8-4934-bebe-22b49c820410	INFO	**cID: 09f2c3c7-c424-4ad2-be1f-246be15b51a4
+END RequestId: fa1e31e8-d8c8-4934-bebe-22b49c820410
+REPORT RequestId: fa1e31e8-d8c8-4934-bebe-22b49c820410	Duration: 1848.35 ms	Billed Duration: 1849 ms	Memory Size: 128 MB	Max Memory Used: 105 MB	Init Duration: 730.01 ms
+
+Request ID
+fa1e31e8-d8c8-4934-bebe-22b49c820410
