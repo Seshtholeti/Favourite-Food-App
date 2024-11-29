@@ -1,6 +1,6 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import csvParser from 'csv-parser';
-import { ConnectClient, ListContactsCommand, GetContactAttributesCommand } from '@aws-sdk/client-connect';
+import { ConnectClient, SearchContactsCommand, GetContactAttributesCommand } from '@aws-sdk/client-connect';
 
 const s3 = new S3Client();
 const connect = new ConnectClient();
@@ -58,14 +58,14 @@ export const handler = async (event) => {
     // Loop through the phone numbers and check Amazon Connect records
     for (const phoneNumber of phoneNumbers) {
       try {
-        // Get contact records from Amazon Connect for yesterday's date
-        const listContactsParams = {
+        // Search contacts from Amazon Connect for yesterday's date
+        const searchContactsParams = {
           InstanceId: instanceId,
           StartTime: startDate,
           EndTime: endDate,
           MaxResults: 100, // Adjust as necessary
         };
-        const contactResponse = await connect.send(new ListContactsCommand(listContactsParams));
+        const contactResponse = await connect.send(new SearchContactsCommand(searchContactsParams));
 
         // Filter to find the specific record that matches the phone number
         const contactRecord = contactResponse.Contacts.find(contact => contact.CustomerEndpoint.Address === phoneNumber);
