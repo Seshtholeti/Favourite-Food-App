@@ -79,24 +79,56 @@ const fetchPhoneNumbersFromCSV = async (bucketName, fileName) => {
 };
 
 const getCallDetails = async (startTime, endTime, instanceId, phoneNumbers) => {
-  // This is a placeholder function. You need to implement logic to fetch call records.
-  
-  // For demonstration purposes, we will return mock data.
-  
   const callDetails = [];
 
   for (const number of phoneNumbers) {
-    // Simulate fetching call records for each number
-    // In a real implementation, you would use GetCurrentMetricDataCommand or other relevant commands 
-    // to fetch actual data from Amazon Connect based on your requirements.
+    // Fetching metrics for the specific number within the time range
+    try {
+      const metricsParams = {
+        InstanceId: instanceId,
+        Filters: {
+          QueueId: '', // Specify a queue ID if needed
+          Channel: 'VOICE',
+          StartTime: startTime,
+          EndTime: endTime,
+        },
+        Groupings: ['AGENT'],
+        HistoricalMetrics: [
+          {
+            Name: 'CONTACTS_ANSWERED',
+            Unit: 'COUNT',
+          },
+        ],
+      };
 
-    // Mock data for demonstration
-    callDetails.push({
-      outboundNumber: number,
-      agentId: 'Agent123',
-      disposition: Math.random() > 0.5 ? 'Answered' : 'Not Answered', // Randomly simulating disposition
-      timestamp: new Date().toISOString(),
-    });
+      const command = new GetCurrentMetricDataCommand(metricsParams);
+      const metricsResponse = await connect.send(command);
+
+      // Process metrics to find relevant agent details
+      metricsResponse.MetricResults.forEach(result => {
+        if (result.Name === 'CONTACTS_ANSWERED') {
+          result.Value.forEach(contact => {
+            if (contact.AgentId && contact.ContactId) { // Assuming AgentId is available in response
+              callDetails.push({
+                outboundNumber: number,
+                agentId: contact.AgentId,
+                disposition: contact.Disposition || 'Answered', // Modify as per your logic
+                timestamp: contact.StartTimestamp || new Date().toISOString(),
+              });
+            }
+          });
+        }
+      });
+      
+    } catch (error) {
+      console.error(`Error fetching metrics for number ${number}:`, error);
+      callDetails.push({
+        outboundNumber: number,
+        agentId: 'Unknown',
+        disposition: 'Error fetching data',
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   return callDetails;
