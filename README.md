@@ -1,7 +1,6 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import csvParser from 'csv-parser';
-import { ConnectClient, ListContactFlowsCommand, GetCurrentMetricDataCommand } from '@aws-sdk/client-connect';
-import { DateTime } from 'luxon';
+import { ConnectClient, GetCurrentMetricDataCommand } from '@aws-sdk/client-connect';
 
 const s3 = new S3Client();
 const connect = new ConnectClient();
@@ -19,11 +18,13 @@ export const handler = async (event) => {
     }
 
     // Step 2: Get yesterday's date
-    const yesterday = DateTime.now().minus({ days: 1 }).startOf('day');
-    const endOfYesterday = yesterday.endOf('day');
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0)).toISOString();
+    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999)).toISOString();
 
     // Step 3: Check call records for yesterday
-    const callDetails = await getCallDetails(yesterday.toISO(), endOfYesterday.toISO(), instanceId, phoneNumbers);
+    const callDetails = await getCallDetails(startOfYesterday, endOfYesterday, instanceId, phoneNumbers);
 
     // Step 4: Log or return the call details
     console.log('Call Details:', callDetails);
@@ -86,7 +87,7 @@ const getCallDetails = async (startTime, endTime, instanceId, phoneNumbers) => {
 
   for (const number of phoneNumbers) {
     // Simulate fetching call records for each number
-    // In a real implementation, you would use ListContactFlowsCommand or other relevant commands 
+    // In a real implementation, you would use GetCurrentMetricDataCommand or other relevant commands 
     // to fetch actual data from Amazon Connect based on your requirements.
 
     // Mock data for demonstration
